@@ -93,19 +93,57 @@ await frame('5-eating', 'Released — munching, cheeks puffed');
 await page.waitForTimeout(1300);
 await frame('6-satisfied', 'Satisfied — happy sway + crumbs');
 
-// 7. A missed drop for the return path.
+// 7. A missed drop: the berry is physical — it falls, bounces and rolls.
 await page.waitForTimeout(1700);
 await page.getByRole('button', { name: 'Feed' }).click();
 await page.waitForTimeout(400);
 const snack2 = await center('.snack');
 await page.mouse.move(snack2.x, snack2.y);
 await page.mouse.down();
-await page.mouse.move(snack2.x + 90, snack2.y - 250, { steps: 12 });
+await page.mouse.move(snack2.x - 20, snack2.y - 280, { steps: 12 });
 await page.mouse.up();
-await page.waitForTimeout(180);
-await frame('7-missed', 'Missed drop — rolling back gently');
-await page.waitForTimeout(600);
-await frame('8-recovered', 'Recovered — ready to try again');
+await page.waitForTimeout(260);
+await frame('7-tumbling', 'Dropped — falling with squash + dust');
+await page.waitForTimeout(2200);
+await frame('8-rests-where-landed', 'Rests where it landed — grabbable there');
+
+// 8. Teasing: waggle the berry in front of Sprig's face.
+const snack3 = await center('.snack');
+const face = { x: sprig.x, y: sprig.y - 30 };
+await page.mouse.move(snack3.x, snack3.y);
+await page.mouse.down();
+await page.mouse.move(face.x - 55, face.y, { steps: 8 });
+for (let i = 0; i < 4; i += 1) {
+  await page.mouse.move(face.x - 15, face.y, { steps: 4 });
+  await page.mouse.move(face.x - 70, face.y, { steps: 4 });
+}
+await page.waitForTimeout(250);
+await frame('9-teased', 'Teased — cheek-puff pout');
+
+// 9. Perch the berry on Sprig's head and wait for the shake-off.
+const anchor = await page.locator('.creature-anchor').boundingBox();
+await page.mouse.move(anchor.x + anchor.width / 2, anchor.y + anchor.height * 0.16, {
+  steps: 10,
+});
+await page.mouse.up();
+await page.waitForTimeout(500);
+await frame('10-perched', 'Perched on the head — cross-eyed wobble');
+await page.waitForTimeout(2400);
+await frame('11-shaken-off', 'Shaken off — tumbling down');
+
+// 10. Set the berry down at Sprig's feet: gobbled straight off the floor.
+await page.waitForTimeout(2200);
+const snack4 = await center('.snack');
+await page.mouse.move(snack4.x, snack4.y);
+await page.mouse.down();
+await page.mouse.move(anchor.x + anchor.width / 2 - 15, anchor.y + anchor.height - 12, {
+  steps: 12,
+});
+await page.mouse.up();
+await page.waitForTimeout(900);
+await frame('12-gobbling', 'Set down at the feet — gobbled off the floor');
+await page.waitForTimeout(2600);
+await frame('13-satisfied-again', 'Satisfied again');
 
 await page.close();
 const video = await page.video().path();

@@ -5,8 +5,9 @@
 The app never renders from timers or randomness. `?state=<name>` selects a
 fixture from `src/game/fixtures.ts` (`idle`, `happy`, `hungry`, `tired`,
 `dirty`, `night`, `care-tray`, plus the feeding moments `feed-ready`,
-`feed-hover`, `feed-eaten`, `feed-returning`), which fully determines the
-frame. Extra parameters compose with it:
+`feed-hover`, `feed-eaten`, `feed-perched`, `feed-gobbling`, `feed-teased`,
+`feed-yearning`), which fully determines the frame. Extra parameters compose
+with it:
 
 | Parameter              | Effect                                      |
 | ---------------------- | ------------------------------------------- |
@@ -24,10 +25,11 @@ committed and painted its first frame it sets `data-app-ready="true"` on
 
 `npm run ux:capture` (`scripts/capture.mjs`) starts an in-process Vite dev
 server, launches the pinned Playwright Chromium, and renders every entry of
-`tests/visual/scenarios.json` (20 scenarios: three idle viewports, all moods,
+`tests/visual/scenarios.json` (23 scenarios: three idle viewports, all moods,
 night, care-tray, touch-target overlay, simulated insets, landscape, reduced
-motion, and seven feeding states covering ready / near / eaten / returning
-plus narrow, inset and reduced-motion variants). Each page is captured with
+motion, and ten feeding states covering ready / near / eaten / perched /
+gobbling / teased / yearning plus narrow, inset and reduced-motion variants).
+Each page is captured with
 `animations: 'disabled'` (CSS animations rewound to a deterministic state) at
 deviceScaleFactor 2, using system fonts only. Output: `ux/current/<name>.png`
 plus `ux/current/manifest.json`.
@@ -37,20 +39,24 @@ plus `ux/current/manifest.json`.
 The feed fixtures freeze the snack lifecycle mid-interaction without a real
 pointer: fixture-initialized phases never auto-advance because the app's
 feeding timers start only from user events, and the Snack component renders
-`held-near`/`returning` phases at fixed CSS poses when no live drag is
-running. `feed-hover` therefore always shows the same anticipation frame and
-`feed-returning` the same rolling-back frame.
+`held-near`/`perched`/`gobbling` phases at fixed CSS poses when no live
+gesture has run. `feed-perched` therefore always shows the same
+balanced-berry frame (never shaken off), and `feed-yearning` the same
+arms-raised reach. The drop-and-roll physics (`falling`) is live-only and is
+covered by the motion artifact, not by a frozen fixture.
 
 ## Motion evidence (`npm run ux:motion`)
 
 Frozen screenshots show composition, not feel. `scripts/capture-motion.mjs`
-drives the REAL feeding interaction (pointer down → carry → hover → release,
-then a deliberate missed drop) against the dev server and writes two
-git-ignored artifacts to `ux/motion/`:
+drives the REAL feeding interaction (drag-feed, a missed drop with the full
+bounce-and-roll, a tease waggle, a head perch with shake-off, and a floor
+gobble) against the dev server and writes two git-ignored artifacts to
+`ux/motion/`:
 
 - `feed-drag.webm` — a Playwright-recorded video of the run
 - `feed-filmstrip.png` — labelled key frames (grab, carry, anticipation,
-  eating, satisfied, missed, recovered) in one image
+  eating, satisfied, tumble, rest-where-landed, teased, perched, shaken off,
+  gobbling) in one image
 
 Regenerate and open both whenever the interaction, its timings, or Sprig's
 reactions change. Because the run uses live pointer events its exact pixels

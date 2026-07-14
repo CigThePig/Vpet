@@ -97,9 +97,27 @@
     "viewport": { "width": 393, "height": 851 }
   },
   {
-    "name": "feed-returning",
-    "label": "Feed · snack rolling back · 393×851",
-    "query": "?state=feed-returning",
+    "name": "feed-perched",
+    "label": "Feed · berry on Sprig's head · 393×851",
+    "query": "?state=feed-perched",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-gobbling",
+    "label": "Feed · gobbling off the floor · 393×851",
+    "query": "?state=feed-gobbling",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-teased",
+    "label": "Feed · teased pout · 393×851",
+    "query": "?state=feed-teased",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-yearning",
+    "label": "Feed · yearning reach · 393×851",
+    "query": "?state=feed-yearning",
     "viewport": { "width": 393, "height": 851 }
   },
   {

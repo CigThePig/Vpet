@@ -1,9 +1,9 @@
 /*
  * The snack: a physical object in the room, not a piece of UI chrome.
  * The button is the touch target (56px ≥ 44px minimum); the berry artwork
- * sits inside it. Drag position is written straight to style.transform by
- * the Snack component; everything here is resting placement, poses and
- * feedback styling.
+ * sits inside it. Drag and physics positions are written straight to
+ * style.transform by the Snack component; everything here is resting
+ * placement, fixture poses and feedback styling.
  */
 
 .snack {
@@ -40,6 +40,14 @@
   width: 100%;
   height: 100%;
   overflow: visible;
+}
+
+/* Rotation while the berry tumbles/rolls (set inline by the physics loop). */
+.snack-spin {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 66%; /* the berry's centre, not the whole viewBox */
 }
 
 /* Gentle idle bob while resting — frozen deterministically in screenshots. */
@@ -90,31 +98,92 @@
   transform: translateY(-7px) scale(1.16) rotate(-4deg);
 }
 
-/* Static poses: used by deterministic fixtures and by the tap/keyboard
-   auto-flight (the position change glides via the transition below). */
-.snack[data-pose] {
-  transition:
-    left 0.32s var(--ease-out),
-    bottom 0.32s var(--ease-out);
+/* Mid-air: no contact shadow while tumbling. */
+.snack[data-phase='falling'] .snack-shadow {
+  opacity: 0.18;
 }
+
+/* Balanced on Sprig's head: proud little object, soft shadow. */
+.snack[data-phase='perched'] .snack-body {
+  transform: rotate(6deg);
+}
+
+.snack[data-phase='perched'] .snack-shadow {
+  opacity: 0.3;
+}
+
+/* Being gobbled off the floor: nibbled wiggle (ambient, frozen in shots). */
+.snack[data-phase='gobbling'] {
+  pointer-events: none;
+}
+
+.snack[data-phase='gobbling'] .snack-body {
+  transform: scale(0.86);
+}
+
+.snack[data-phase='gobbling'] .snack-berry {
+  animation: snack-nibbled 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes snack-nibbled {
+  from {
+    transform: translateX(-1px) rotate(-3deg);
+  }
+  to {
+    transform: translateX(1px) rotate(3deg);
+  }
+}
+
+/* The glide used by tap/keyboard gives and the head-perch snap. */
+.snack[data-glide] {
+  transition: transform 0.32s var(--ease-out);
+}
+
+/* Dust puffed up where the berry thumps the floor (element appended to
+   <body> by the physics loop; --dust-scale grows with impact speed). */
+.snack-dust {
+  position: fixed;
+  z-index: var(--z-snack);
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: rgba(214, 196, 160, 0.5);
+  box-shadow:
+    10px -2px 0 -1px rgba(214, 196, 160, 0.4),
+    -9px -1px 0 -1px rgba(214, 196, 160, 0.35);
+  animation: dust-puff 0.5s var(--ease-out) forwards;
+}
+
+@keyframes dust-puff {
+  from {
+    opacity: 0.9;
+    transform: scale(calc(var(--dust-scale, 1) * 0.6)) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(var(--dust-scale, 1)) translateY(-7px);
+  }
+}
+
+/* ---- Static fixture poses ----------------------------------------------------
+   Applied only to phases that were never touched by a live gesture, so the
+   deterministic ?state= fixtures render exact frames. */
 
 .snack[data-pose='near'] {
   left: 33%;
   bottom: 24%;
 }
 
-.snack[data-pose='return'] {
-  left: 21.5%;
-  bottom: 22%;
+.snack[data-pose='perch'] {
+  left: calc(50% - 55px);
+  bottom: 35.8%;
 }
 
-.snack[data-pose='return'] .snack-body {
-  transform: rotate(-10deg);
-}
-
-/* Live return after a missed drop: the inline transform glides back home. */
-.snack[data-live-return] {
-  transition: transform 0.38s var(--ease-out);
+.snack[data-pose='gobble'] {
+  left: calc(50% - 26px);
+  bottom: 18.5%;
 }
 
 /* Landscape: follow the creature's shifted anchor. */
@@ -129,8 +198,13 @@
     bottom: 17%;
   }
 
-  .snack[data-pose='return'] {
-    left: 25%;
-    bottom: 15%;
+  .snack[data-pose='perch'] {
+    left: calc(45% - 44px);
+    bottom: 42%;
+  }
+
+  .snack[data-pose='gobble'] {
+    left: calc(45% - 24px);
+    bottom: 11%;
   }
 }

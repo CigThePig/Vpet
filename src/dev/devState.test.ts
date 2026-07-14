@@ -18,7 +18,10 @@ describe('parseDevOptions', () => {
       'feed-ready',
       'feed-hover',
       'feed-eaten',
-      'feed-returning',
+      'feed-perched',
+      'feed-gobbling',
+      'feed-teased',
+      'feed-yearning',
     ]) {
       expect(parseDevOptions(`?state=${name}`).fixture).toBe(name);
     }

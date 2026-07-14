@@ -20,7 +20,10 @@ export type FixtureName =
   | 'feed-ready'
   | 'feed-hover'
   | 'feed-eaten'
-  | 'feed-returning';
+  | 'feed-perched'
+  | 'feed-gobbling'
+  | 'feed-teased'
+  | 'feed-yearning';
 
 export const FIXTURES: Record<FixtureName, HabitatState> = {
   idle: { ...DEFAULT_HABITAT_STATE },
@@ -37,7 +40,20 @@ export const FIXTURES: Record<FixtureName, HabitatState> = {
   'feed-ready': { ...DEFAULT_HABITAT_STATE, activeTray: 'feed', snack: 'ready' },
   'feed-hover': { ...DEFAULT_HABITAT_STATE, activeTray: 'feed', snack: 'held-near' },
   'feed-eaten': { ...DEFAULT_HABITAT_STATE, activeTray: 'feed', snack: 'eaten' },
-  'feed-returning': { ...DEFAULT_HABITAT_STATE, activeTray: 'feed', snack: 'returning' },
+  'feed-perched': { ...DEFAULT_HABITAT_STATE, activeTray: 'feed', snack: 'perched' },
+  'feed-gobbling': { ...DEFAULT_HABITAT_STATE, activeTray: 'feed', snack: 'gobbling' },
+  'feed-teased': {
+    ...DEFAULT_HABITAT_STATE,
+    activeTray: 'feed',
+    snack: 'held-near',
+    flourish: 'teased',
+  },
+  'feed-yearning': {
+    ...DEFAULT_HABITAT_STATE,
+    activeTray: 'feed',
+    snack: 'ready',
+    flourish: 'yearning',
+  },
 };
 
 export const FIXTURE_NAMES = Object.keys(FIXTURES) as FixtureName[];

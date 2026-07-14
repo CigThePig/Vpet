@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 import type { HabitatState, TimeOfDay } from '../game/types';
-import { snackReaction } from '../game/feed';
+import { effectiveReaction } from '../game/feed';
 import { Creature } from './Creature';
 import './habitat.css';
 
@@ -34,7 +34,7 @@ export function Habitat({ state, creatureAnchorRef }: HabitatProps) {
           sleeping={state.sleeping}
           dirty={state.dirty}
           time={timeOfDay}
-          reaction={snackReaction(state.snack)}
+          reaction={effectiveReaction(state)}
         />
       </div>
       <AmbientMotes time={timeOfDay} />

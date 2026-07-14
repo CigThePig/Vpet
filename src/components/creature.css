@@ -95,6 +95,34 @@
   --look-rest-y: 0.5;
 }
 
+.creature[data-reaction='teased'] {
+  --look-rest-x: -0.5;
+  --look-rest-y: 0.2;
+}
+
+.creature[data-reaction='yearning'] {
+  --look-rest-x: -0.9;
+  --look-rest-y: 0.6;
+}
+
+/* Cross-eyed up at the berry on its own head (it sits left of the sprout). */
+.creature[data-reaction='perched'] {
+  --look-rest-x: -0.35;
+  --look-rest-y: -0.85;
+}
+
+.pupil {
+  transition: transform var(--duration-press) var(--ease-out);
+}
+
+.creature[data-reaction='perched'] .pupil--left {
+  transform: translate(4.5px, -3px);
+}
+
+.creature[data-reaction='perched'] .pupil--right {
+  transform: translate(-4.5px, -3px);
+}
+
 /* Whole-body posture answers the snack. Applied on the outer element so it
    never fights the breathing animation on .creature-body-group. */
 .creature {
@@ -108,6 +136,72 @@
 
 .creature[data-reaction='missed'] {
   transform: rotate(-1.2deg);
+}
+
+/* Teased: turn slightly away, unimpressed. */
+.creature[data-reaction='teased'] {
+  transform: rotate(2.4deg);
+}
+
+.creature[data-reaction='teased'] .creature-leaf {
+  transform: rotate(18deg);
+}
+
+/* Gobbling: bow down over the berry on the floor (leans toward it). */
+.creature[data-reaction='gobbling'] {
+  transform: translateY(9px) scaleY(0.9)
+    rotate(calc(var(--look-x, var(--look-rest-x, -0.4)) * 5deg));
+}
+
+/* Yearning: a hopeful stretch upward-toward the berry with both arms. */
+.creature[data-reaction='yearning'] {
+  transform: translateY(-3px);
+}
+
+.creature-arm {
+  transform-box: fill-box;
+  transform-origin: 50% 15%;
+  transition: transform var(--duration-state) var(--ease-spring);
+}
+
+.creature[data-reaction='yearning'] .creature-arm--left {
+  transform: rotate(-74deg) translate(-6px, -8px);
+}
+
+.creature[data-reaction='yearning'] .creature-arm--right {
+  transform: rotate(74deg) translate(6px, -8px);
+}
+
+.creature[data-reaction='yearning'] .creature-svg {
+  animation: yearn-hop 0.6s var(--ease-spring) 2;
+}
+
+@keyframes yearn-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Perched: a careful, slightly frozen wobble — don't drop the berry! */
+.creature[data-reaction='perched'] .creature-svg {
+  animation: perch-wobble 1.7s ease-in-out infinite alternate;
+}
+
+@keyframes perch-wobble {
+  from {
+    transform: rotate(-1.5deg);
+  }
+  to {
+    transform: rotate(1.5deg);
+  }
+}
+
+.creature[data-reaction='perched'] .creature-leaf {
+  transform: rotate(16deg) scale(0.94);
 }
 
 /* The sprout perks up when food comes close, bounces once when satisfied. */
