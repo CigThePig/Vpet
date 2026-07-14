@@ -1,0 +1,58 @@
+# Build and deploy the static app to GitHub Pages.
+#
+# Requirements (one-time repo setup): Settings → Pages → Source: "GitHub Actions".
+# No secrets are needed beyond the standard GITHUB_TOKEN permissions below.
+#
+# Repository-name note: vite.config.ts uses `base: './'` (relative asset
+# URLs), so this workflow keeps working if the repository is renamed —
+# the site simply moves to https://<owner>.github.io/<new-name>/.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      # Visual (Playwright) tests are intentionally NOT run here: the
+      # committed baselines are rendered by the pinned local Chromium, and
+      # font/GPU differences on fresh CI runners produce false diffs.
+      # Run `npm run test:visual` locally / in the dev container instead.
+      - name: Build
+        run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

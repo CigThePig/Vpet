@@ -1,0 +1,29 @@
+.journal-button {
+  position: absolute;
+  z-index: var(--z-topbar);
+  top: calc(var(--safe-top) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    transform var(--duration-press) var(--ease-out),
+    color var(--duration-press) var(--ease-out);
+}
+
+.journal-button:active {
+  transform: scale(0.9);
+  color: var(--color-accent);
+}
+
+.journal-button svg {
+  width: 22px;
+  height: 22px;
+}

@@ -1,0 +1,48 @@
+.dev-panel {
+  position: fixed;
+  z-index: var(--z-debug);
+  top: calc(var(--safe-top) + var(--space-3));
+  left: calc(var(--safe-left) + var(--space-3));
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  background: rgba(12, 18, 16, 0.92);
+  border: 1px solid var(--color-surface-border);
+  color: var(--color-text-muted);
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.dev-panel h2 {
+  margin: var(--space-1) 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.dev-panel ul {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.dev-panel li {
+  margin: 0;
+}
+
+.dev-panel a {
+  display: block;
+  min-height: 24px;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-s);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.dev-panel a[aria-current='true'] {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}

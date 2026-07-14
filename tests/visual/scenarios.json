@@ -1,0 +1,81 @@
+[
+  {
+    "name": "idle-narrow",
+    "label": "Idle · narrow phone · 320×568",
+    "query": "?state=idle",
+    "viewport": { "width": 320, "height": 568 }
+  },
+  {
+    "name": "idle-pixel",
+    "label": "Idle · Android (Pixel-class) · 393×851",
+    "query": "?state=idle",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "idle-large",
+    "label": "Idle · large phone · 430×932",
+    "query": "?state=idle",
+    "viewport": { "width": 430, "height": 932 }
+  },
+  {
+    "name": "happy",
+    "label": "Happy · 393×851",
+    "query": "?state=happy",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "hungry",
+    "label": "Hungry · 393×851",
+    "query": "?state=hungry",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "tired",
+    "label": "Tired · 393×851",
+    "query": "?state=tired",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "dirty",
+    "label": "Dirty · 393×851",
+    "query": "?state=dirty",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "night",
+    "label": "Night (asleep) · 393×851",
+    "query": "?state=night",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "care-tray",
+    "label": "Care tray active · 393×851",
+    "query": "?state=care-tray",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "touch-targets",
+    "label": "Touch-target overlay · 393×851",
+    "query": "?state=idle&debug=touch-targets",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "insets",
+    "label": "Simulated safe areas · 393×851",
+    "query": "?state=idle&insets=1",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "landscape",
+    "label": "Idle · landscape · 851×393",
+    "query": "?state=idle",
+    "viewport": { "width": 851, "height": 393 }
+  },
+  {
+    "name": "reduced-motion",
+    "label": "Reduced motion · 393×851",
+    "query": "?state=idle&motion=reduced",
+    "viewport": { "width": 393, "height": 851 },
+    "reducedMotion": true
+  }
+]

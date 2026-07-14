@@ -1,0 +1,100 @@
+/*
+ * Design tokens — the single source of truth for colour, spacing, motion,
+ * layering and touch sizing. Components must use these custom properties;
+ * do not scatter raw values through component stylesheets without a reason
+ * (organic SVG artwork is the one sanctioned exception — creature and prop
+ * fills are illustration, not UI chrome).
+ */
+
+:root {
+  /* ---- Colour: background & habitat ---------------------------------- */
+  --color-bg-app: #131d1a; /* page behind everything, letterbox bars     */
+  --color-wall-top: #22332d;
+  --color-wall-bottom: #2c4038;
+  --color-floor-top: #4a3a2b;
+  --color-floor-bottom: #33281e;
+  --color-rug: #56653f;
+  --color-rug-edge: #6c7c4e;
+
+  /* ---- Colour: surfaces (tray, panels, toast) ------------------------- */
+  --color-surface: #2b3a34;
+  --color-surface-raised: #35463f;
+  --color-surface-border: rgba(240, 226, 195, 0.1);
+
+  /* ---- Colour: text ---------------------------------------------------- */
+  --color-text: #f0e6d2;
+  --color-text-muted: #b3bfae;
+  --color-text-faint: #83907f;
+
+  /* ---- Colour: accents & state ----------------------------------------- */
+  --color-accent: #e8a75d; /* warm lamp amber — primary accent           */
+  --color-accent-soft: rgba(232, 167, 93, 0.22);
+  --color-positive: #9dc37e;
+  --color-warning: #d98a5f;
+  --color-focus-ring: #ffd9a0;
+  --color-debug: #ff4fd8; /* touch-target overlay only                    */
+
+  /* ---- Spacing (4px base scale) ---------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* ---- Radii ------------------------------------------------------------ */
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 24px;
+  --radius-pill: 999px;
+
+  /* ---- Shadows ----------------------------------------------------------- */
+  --shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.38);
+  --shadow-raised: 0 3px 10px rgba(0, 0, 0, 0.32);
+  --shadow-inset-top: inset 0 1px 0 rgba(240, 226, 195, 0.09);
+
+  /* ---- Motion ------------------------------------------------------------- */
+  --duration-press: 120ms; /* immediate tactile feedback                  */
+  --duration-state: 260ms; /* mood / tray state changes                   */
+  --duration-drift: 600ms; /* slower scene transitions                    */
+  --duration-ambient: 5.2s; /* breathing, motes, plant sway               */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+
+  /* ---- Touch & safe areas --------------------------------------------------- */
+  --touch-target-min: 44px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* ---- Layering (z-index conventions) ---------------------------------------- */
+  --z-habitat: 0; /* room, props, creature live inside this stack     */
+  --z-foreground: 20; /* vignette / foreground flora                    */
+  --z-tray: 30; /* care tray dock                                       */
+  --z-toast: 40; /* transient messages                                   */
+  --z-topbar: 45; /* journal / settings access                           */
+  --z-debug: 60; /* dev panel & touch-target overlay                     */
+}
+
+/* Night: the habitat cools down and darkens; lamp glow carries the scene. */
+[data-time='night'] {
+  --color-bg-app: #0c1213;
+  --color-wall-top: #131f21;
+  --color-wall-bottom: #1a2a29;
+  --color-floor-top: #2c231b;
+  --color-floor-bottom: #1d1712;
+  --color-rug: #39452f;
+  --color-rug-edge: #46543a;
+  --color-surface: #1f2b28;
+  --color-surface-raised: #283733;
+}
+
+/* Simulated device safe areas (?insets=1) so screenshots can prove the
+   layout respects notches and home indicators without a real device. */
+[data-sim-insets='true'] {
+  --safe-top: 52px;
+  --safe-right: 0px;
+  --safe-bottom: 30px;
+  --safe-left: 0px;
+}
