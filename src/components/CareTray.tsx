@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import type { TrayCategory } from '../game/types';
 import { TRAY_CATEGORIES } from '../game/types';
 import './tray.css';
@@ -12,15 +13,18 @@ const LABELS: Record<TrayCategory, string> = {
 interface CareTrayProps {
   active: TrayCategory | null;
   onSelect: (category: TrayCategory) => void;
+  /** The Feed button, so the app can hand focus back when a snack goes away. */
+  feedRef?: RefObject<HTMLButtonElement | null>;
 }
 
 /** Bottom interaction dock: four future care categories as tactile buttons. */
-export function CareTray({ active, onSelect }: CareTrayProps) {
+export function CareTray({ active, onSelect, feedRef }: CareTrayProps) {
   return (
     <nav className="care-tray" aria-label="Care actions" data-active={active ?? undefined}>
       {TRAY_CATEGORIES.map((category) => (
         <button
           key={category}
+          ref={category === 'feed' ? feedRef : undefined}
           type="button"
           className="tray-button"
           aria-pressed={active === category}

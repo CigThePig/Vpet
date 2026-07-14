@@ -33,6 +33,8 @@ app should feel like checking on something small that is glad you came.
 ## Long-term interaction ideas (not commitments)
 
 - Drag a snack from the tray to Sprig's mouth; it leans toward the food.
+  _(First version shipped: Feed places one snack in the room; drag it to
+  Sprig — or press it, for keyboard/screen-reader users — and Sprig eats.)_
 - Scratch/pet with small circular strokes; slow blink and lean-in response.
 - Drag a blanket over Sprig at night; it settles and sleeps.
 - Pick up messes by dragging them to a bin that appears on grab.
@@ -42,9 +44,11 @@ app should feel like checking on something small that is glad you came.
 
 ## Current non-goals
 
-Feeding mechanics, inventory, persistence, progression/evolution, currency,
-collections, notifications, sound, and any server component. The foundation
-must stay small and polished rather than broad and unfinished.
+Feeding _simulation_ (hunger decay, cooldowns, multiple foods), inventory,
+persistence, progression/evolution, currency, collections, notifications,
+sound, and any server component. The feeding gesture exists purely as a
+presentation-layer interaction; its reward is Sprig's response. The
+foundation must stay small and polished rather than broad and unfinished.
 
 ## Simulation state vs interface presentation
 

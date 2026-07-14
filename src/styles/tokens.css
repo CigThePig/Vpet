@@ -72,6 +72,7 @@
   --z-habitat: 0; /* room, props, creature live inside this stack     */
   --z-foreground: 20; /* vignette / foreground flora                    */
   --z-tray: 30; /* care tray dock                                       */
+  --z-snack: 34; /* carried world objects ride over the room and tray    */
   --z-toast: 40; /* transient messages                                   */
   --z-topbar: 45; /* journal / settings access                           */
   --z-debug: 60; /* dev panel & touch-target overlay                     */

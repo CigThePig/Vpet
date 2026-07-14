@@ -1,0 +1,136 @@
+/*
+ * The snack: a physical object in the room, not a piece of UI chrome.
+ * The button is the touch target (56px ≥ 44px minimum); the berry artwork
+ * sits inside it. Drag position is written straight to style.transform by
+ * the Snack component; everything here is resting placement, poses and
+ * feedback styling.
+ */
+
+.snack {
+  position: absolute;
+  z-index: var(--z-snack);
+  left: 17%;
+  bottom: 20.5%;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  touch-action: none; /* the drag must never scroll or pull-to-refresh */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.snack:active {
+  cursor: grabbing;
+}
+
+.snack-body {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition:
+    transform var(--duration-press) var(--ease-out),
+    filter var(--duration-press) var(--ease-out);
+}
+
+.snack-body svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Gentle idle bob while resting — frozen deterministically in screenshots. */
+.snack[data-phase='ready'] .snack-berry {
+  animation: snack-bob 3.4s ease-in-out infinite alternate;
+}
+
+@keyframes snack-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2.5px);
+  }
+}
+
+/* Arrival: a soft settle when the snack appears (finite, so screenshot
+   capture fast-forwards it to its end state). */
+.snack[data-phase='ready'] .snack-body {
+  animation: snack-settle 0.34s var(--ease-spring);
+}
+
+@keyframes snack-settle {
+  from {
+    transform: scale(0.6) translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Picked up: lift, grow slightly, shadow detaches. */
+.snack[data-phase='held'] .snack-body,
+.snack[data-phase='held-near'] .snack-body {
+  transform: translateY(-5px) scale(1.1);
+  filter: drop-shadow(0 10px 8px rgba(6, 10, 9, 0.42));
+}
+
+.snack[data-phase='held'] .snack-shadow,
+.snack[data-phase='held-near'] .snack-shadow {
+  opacity: 0.35;
+}
+
+/* Close to Sprig: the snack itself answers with a touch more presence. */
+.snack[data-phase='held-near'] .snack-body {
+  transform: translateY(-7px) scale(1.16) rotate(-4deg);
+}
+
+/* Static poses: used by deterministic fixtures and by the tap/keyboard
+   auto-flight (the position change glides via the transition below). */
+.snack[data-pose] {
+  transition:
+    left 0.32s var(--ease-out),
+    bottom 0.32s var(--ease-out);
+}
+
+.snack[data-pose='near'] {
+  left: 33%;
+  bottom: 24%;
+}
+
+.snack[data-pose='return'] {
+  left: 21.5%;
+  bottom: 22%;
+}
+
+.snack[data-pose='return'] .snack-body {
+  transform: rotate(-10deg);
+}
+
+/* Live return after a missed drop: the inline transform glides back home. */
+.snack[data-live-return] {
+  transition: transform 0.38s var(--ease-out);
+}
+
+/* Landscape: follow the creature's shifted anchor. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .snack {
+    left: 20%;
+    bottom: 13%;
+  }
+
+  .snack[data-pose='near'] {
+    left: 33%;
+    bottom: 17%;
+  }
+
+  .snack[data-pose='return'] {
+    left: 25%;
+    bottom: 15%;
+  }
+}

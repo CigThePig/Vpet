@@ -15,7 +15,8 @@
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
     "ux:capture": "node scripts/capture.mjs",
-    "ux:report": "node scripts/contact-sheet.mjs"
+    "ux:report": "node scripts/contact-sheet.mjs",
+    "ux:motion": "node scripts/capture-motion.mjs"
   },
   "dependencies": {
     "react": "^19.1.0",

@@ -1,4 +1,5 @@
 import type { Mood, TimeOfDay } from '../game/types';
+import type { SnackReaction } from '../game/feed';
 import './creature.css';
 
 interface CreatureProps {
@@ -6,16 +7,18 @@ interface CreatureProps {
   sleeping: boolean;
   dirty: boolean;
   time: TimeOfDay;
+  /** How Sprig is responding to the snack; overrides the mood face. */
+  reaction?: SnackReaction;
 }
 
 type EyeStyle = 'open' | 'happy' | 'droop' | 'heavy' | 'closed';
-type MouthStyle = 'smile' | 'grin' | 'frown' | 'yawn' | 'flat' | 'rest';
+type MouthStyle = 'smile' | 'grin' | 'frown' | 'yawn' | 'flat' | 'rest' | 'open' | 'chew';
 
 /**
  * Sprig — a small sprout-topped gumdrop creature, drawn as inline SVG so its
  * face, posture and markings can respond to state without image assets.
  */
-export function Creature({ mood, sleeping, dirty, time }: CreatureProps) {
+export function Creature({ mood, sleeping, dirty, time, reaction = 'none' }: CreatureProps) {
   let eyes: EyeStyle = 'open';
   let mouth: MouthStyle = 'smile';
   if (sleeping) {
@@ -34,10 +37,34 @@ export function Creature({ mood, sleeping, dirty, time }: CreatureProps) {
     mouth = 'flat';
   }
 
-  const leafDroop = sleeping || mood === 'hungry' || mood === 'tired';
+  // The snack response takes over the face while it is happening.
+  if (reaction === 'notice') {
+    eyes = 'open';
+    mouth = 'smile';
+  } else if (reaction === 'anticipate') {
+    eyes = 'open';
+    mouth = 'open';
+  } else if (reaction === 'eating') {
+    eyes = 'closed';
+    mouth = 'chew';
+  } else if (reaction === 'satisfied') {
+    eyes = 'happy';
+    mouth = 'grin';
+  } else if (reaction === 'missed') {
+    eyes = 'open';
+    mouth = 'rest';
+  }
+
+  const leafDroop = reaction === 'none' && (sleeping || mood === 'hungry' || mood === 'tired');
 
   return (
-    <div className="creature" data-mood={mood} data-sleeping={sleeping} data-time={time}>
+    <div
+      className="creature"
+      data-mood={mood}
+      data-sleeping={sleeping}
+      data-time={time}
+      data-reaction={reaction}
+    >
       <svg className="creature-svg" viewBox="0 0 220 200">
         <defs>
           <radialGradient id="sprig-body" cx="0.42" cy="0.3" r="0.85">
@@ -103,11 +130,27 @@ export function Creature({ mood, sleeping, dirty, time }: CreatureProps) {
           {/* face */}
           <g className="creature-face">
             <Eyes style={eyes} />
+            {/* puffed cheeks while munching */}
+            {reaction === 'eating' && (
+              <g fill="#f6ecd4" opacity="0.9">
+                <circle cx="94" cy="114" r="9" />
+                <circle cx="126" cy="114" r="9" />
+              </g>
+            )}
             <Mouth style={mouth} />
             <ellipse cx="72" cy="116" rx="8" ry="5" fill="#d98a5f" opacity="0.32" />
             <ellipse cx="148" cy="116" rx="8" ry="5" fill="#d98a5f" opacity="0.32" />
           </g>
         </g>
+
+        {/* a few honest crumbs after the snack */}
+        {reaction === 'satisfied' && (
+          <g className="creature-crumbs" fill="#b65a41">
+            <circle cx="92" cy="184" r="2.4" />
+            <circle cx="118" cy="188" r="1.8" />
+            <circle cx="106" cy="181" r="1.4" opacity="0.8" />
+          </g>
+        )}
 
         {sleeping && (
           <g className="creature-zzz" fill="#cfd8e6" fontFamily="inherit" fontWeight="600">
@@ -166,13 +209,17 @@ function Eyes({ style }: { style: EyeStyle }) {
   }
   return (
     <g>
-      <circle cx="86" cy="94" r="8" fill={eyeFill} />
-      <circle cx="134" cy="94" r="8" fill={eyeFill} />
-      <g fill="#ffffff">
-        <circle cx="83.5" cy="91" r="2.6" />
-        <circle cx="131.5" cy="91" r="2.6" />
-        <circle cx="89" cy="96.5" r="1.2" opacity="0.8" />
-        <circle cx="137" cy="96.5" r="1.2" opacity="0.8" />
+      {/* Pupils sit in a group the CSS shifts via --look-x/--look-y so Sprig
+          can watch the snack travel. */}
+      <g className="creature-pupils">
+        <circle cx="86" cy="94" r="8" fill={eyeFill} />
+        <circle cx="134" cy="94" r="8" fill={eyeFill} />
+        <g fill="#ffffff">
+          <circle cx="83.5" cy="91" r="2.6" />
+          <circle cx="131.5" cy="91" r="2.6" />
+          <circle cx="89" cy="96.5" r="1.2" opacity="0.8" />
+          <circle cx="137" cy="96.5" r="1.2" opacity="0.8" />
+        </g>
       </g>
       {droop && (
         <g stroke="#8a7350" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.9">
@@ -190,6 +237,20 @@ function Mouth({ style }: { style: MouthStyle }) {
   switch (style) {
     case 'grin':
       return <path d="M96 110 Q110 128 124 110 Q110 118 96 110 Z" fill="#7a5240" />;
+    case 'open':
+      // Expectant little "o" — Sprig is ready for the snack.
+      return (
+        <g>
+          <ellipse cx="110" cy="115" rx="8" ry="9.5" fill="#7a5240" />
+          <ellipse cx="110" cy="119" rx="4.5" ry="3.5" fill="#d98a5f" opacity="0.85" />
+        </g>
+      );
+    case 'chew':
+      return (
+        <g className="creature-chew">
+          <ellipse cx="110" cy="114" rx="7" ry="5.5" fill="#7a5240" />
+        </g>
+      );
     case 'frown':
       return (
         <path

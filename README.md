@@ -7,11 +7,13 @@ built as a static web app. The guiding principle:
 > exceptionally good.
 
 **Current scope:** the technical and visual foundation — a polished static
-habitat screen, a deterministic development-state system, and an automated
+habitat screen, a deterministic development-state system, an automated
 screenshot / visual-review workflow designed so coding agents (and humans) can
-iterate on the UI by looking at rendered pixels, not just source code. Game
-systems (feeding, persistence, progression…) are intentionally not implemented
-yet. See [docs/product-vision.md](docs/product-vision.md).
+iterate on the UI by looking at rendered pixels, not just source code — plus
+the first direct-manipulation interaction: activate **Feed** and drag one
+snack to Sprig (keyboard/screen-reader users press the snack instead). Broader
+game systems (hunger simulation, persistence, progression…) are intentionally
+not implemented yet. See [docs/product-vision.md](docs/product-vision.md).
 
 ## Stack
 
@@ -27,7 +29,12 @@ npm ci                # reproducible install
 
 Playwright needs a Chromium build. In the standard agent container one is
 pre-installed (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`). Elsewhere run
-`npx playwright install chromium` once.
+once:
+
+```bash
+npx playwright install chromium
+npx playwright install-deps chromium   # Linux only: host libraries
+```
 
 ## Commands
 
@@ -41,6 +48,7 @@ pre-installed (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`). Elsewhere run
 | `npm run test:visual:update` | Regenerate approved visual baselines (`ux/baseline/`)           |
 | `npm run ux:capture`         | Capture all dev states as PNGs into `ux/current/`               |
 | `npm run ux:report`          | Build the labelled contact sheet `ux/reports/contact-sheet.png` |
+| `npm run ux:motion`          | Record the real feed drag: `ux/motion/` video + filmstrip       |
 | `npm run lint`               | ESLint                                                          |
 | `npm run format`             | Prettier                                                        |
 
@@ -51,6 +59,7 @@ parameters (full reference in [docs/visual-testing.md](docs/visual-testing.md)):
 
 ```
 /?state=idle|happy|hungry|tired|dirty|night|care-tray
+/?state=feed-ready|feed-hover|feed-eaten|feed-returning
 /?debug=touch-targets     outline every hit area
 /?motion=reduced          force reduced motion
 /?insets=1                simulate notch / home-indicator safe areas

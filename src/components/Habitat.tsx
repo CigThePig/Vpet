@@ -1,13 +1,21 @@
+import type { RefObject } from 'react';
 import type { HabitatState, TimeOfDay } from '../game/types';
+import { snackReaction } from '../game/feed';
 import { Creature } from './Creature';
 import './habitat.css';
+
+interface HabitatProps {
+  state: HabitatState;
+  /** Exposes the creature's on-screen box for snack-drop hit testing. */
+  creatureAnchorRef?: RefObject<HTMLDivElement | null>;
+}
 
 /**
  * The room around the creature, built as layered CSS + inline SVG props.
  * Background: wall & window. Middle ground: lamp, plant, floor, rug, mess.
  * Focal point: the creature. Foreground: ambient motes and a soft vignette.
  */
-export function Habitat({ state }: { state: HabitatState }) {
+export function Habitat({ state, creatureAnchorRef }: HabitatProps) {
   const { timeOfDay } = state;
   return (
     <div className="habitat" aria-hidden="true">
@@ -20,12 +28,13 @@ export function Habitat({ state }: { state: HabitatState }) {
       <div className="habitat-lamp-glow" />
       <Lamp time={timeOfDay} />
       <Plant />
-      <div className="creature-anchor">
+      <div className="creature-anchor" ref={creatureAnchorRef}>
         <Creature
           mood={state.mood}
           sleeping={state.sleeping}
           dirty={state.dirty}
           time={timeOfDay}
+          reaction={snackReaction(state.snack)}
         />
       </div>
       <AmbientMotes time={timeOfDay} />

@@ -103,3 +103,49 @@ layout with media-query adjustments instead of a parallel composition.
 the pre-installed `/opt/pw-browsers/chromium-1194`, keeping installs
 network-light and baselines stable. Upgrading Playwright therefore means
 regenerating baselines in the same change.
+
+## D13 — Feeding drag: Pointer Events + capture, position via direct DOM
+
+The snack (`src/components/Snack.tsx`) uses Pointer Events with
+`setPointerCapture`, so one code path serves mouse/touch/pen, the drag
+survives fast movement and leaving the element's bounds, and
+`pointercancel`/`lostpointercapture`/Escape/window-blur all funnel into one
+cancel routine (gentle roll-back — the interface can never stick in a drag).
+During a drag, position is written straight to `style.transform`; React state
+changes only on lifecycle transitions, never per move. **Rejected:** HTML5
+drag-and-drop (no touch, ghost images); mouse+touch event pairs (duplicated
+logic, ghost clicks); per-move `setState` (re-renders the whole habitat at
+pointer rate).
+
+## D14 — Snack lifecycle as pure transitions in presentation state
+
+`HabitatState` gained one field, `snack: SnackPhase` (`none → ready → held ⇄
+held-near → eating → eaten`, with `returning` for misses). All transitions
+are pure guarded functions in `src/game/feed.ts` — a release can only succeed
+from `held-near`, so duplicate events can't double-feed. App timers
+(flight/munch/linger/return) start only from user events, never from
+rendering a state, which is why fixture-initialized phases hold still for
+screenshots. **Rejected:** a generalized item/inventory/physics system (one
+snack doesn't need it; the pure-transition pattern is the reusable part);
+a state-machine library (seven phases don't justify a dependency).
+
+## D15 — Accessibility: activation-equivalent, not drag-emulation
+
+A press that doesn't travel (keyboard Enter/Space, VoiceOver double-tap,
+quick touch tap) gives the snack directly: it glides to Sprig and triggers
+the exact same transition, reactions and announcement as a drag. The snack is
+a real `<button>` ("Give snack to Sprig"); Feed activation moves focus to it,
+and it hands focus back to Feed when consumed or dismissed (Escape).
+Sprig's condition is one visually-hidden sentence (`describeSprig`), and only
+meaningful results are announced through the existing toast live region —
+never continuous pointer movement. **Rejected:** arrow-key "move the snack"
+emulation (slow, inequivalent, and harder to keep unstuck).
+
+## D16 — Motion evidence is recorded, not asserted
+
+`npm run ux:motion` replays the real pointer interaction and records a WebM
+video plus a labelled key-frame filmstrip into git-ignored `ux/motion/`.
+Motion quality is reviewed by humans/agents looking at these artifacts;
+regression protection stays with the deterministic frozen fixtures.
+**Rejected:** video-diff testing (flaky, heavyweight) and adding an
+ffmpeg/image dependency (Playwright's Chromium already renders the filmstrip).

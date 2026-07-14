@@ -4,8 +4,9 @@
 
 The app never renders from timers or randomness. `?state=<name>` selects a
 fixture from `src/game/fixtures.ts` (`idle`, `happy`, `hungry`, `tired`,
-`dirty`, `night`, `care-tray`), which fully determines the frame. Extra
-parameters compose with it:
+`dirty`, `night`, `care-tray`, plus the feeding moments `feed-ready`,
+`feed-hover`, `feed-eaten`, `feed-returning`), which fully determines the
+frame. Extra parameters compose with it:
 
 | Parameter              | Effect                                      |
 | ---------------------- | ------------------------------------------- |
@@ -23,11 +24,38 @@ committed and painted its first frame it sets `data-app-ready="true"` on
 
 `npm run ux:capture` (`scripts/capture.mjs`) starts an in-process Vite dev
 server, launches the pinned Playwright Chromium, and renders every entry of
-`tests/visual/scenarios.json` (13 scenarios: three idle viewports, all moods,
+`tests/visual/scenarios.json` (20 scenarios: three idle viewports, all moods,
 night, care-tray, touch-target overlay, simulated insets, landscape, reduced
-motion). Each page is captured with `animations: 'disabled'` (CSS animations
-rewound to a deterministic state) at deviceScaleFactor 2, using system fonts
-only. Output: `ux/current/<name>.png` plus `ux/current/manifest.json`.
+motion, and seven feeding states covering ready / near / eaten / returning
+plus narrow, inset and reduced-motion variants). Each page is captured with
+`animations: 'disabled'` (CSS animations rewound to a deterministic state) at
+deviceScaleFactor 2, using system fonts only. Output: `ux/current/<name>.png`
+plus `ux/current/manifest.json`.
+
+### How feeding fixtures stay deterministic
+
+The feed fixtures freeze the snack lifecycle mid-interaction without a real
+pointer: fixture-initialized phases never auto-advance because the app's
+feeding timers start only from user events, and the Snack component renders
+`held-near`/`returning` phases at fixed CSS poses when no live drag is
+running. `feed-hover` therefore always shows the same anticipation frame and
+`feed-returning` the same rolling-back frame.
+
+## Motion evidence (`npm run ux:motion`)
+
+Frozen screenshots show composition, not feel. `scripts/capture-motion.mjs`
+drives the REAL feeding interaction (pointer down → carry → hover → release,
+then a deliberate missed drop) against the dev server and writes two
+git-ignored artifacts to `ux/motion/`:
+
+- `feed-drag.webm` — a Playwright-recorded video of the run
+- `feed-filmstrip.png` — labelled key frames (grab, carry, anticipation,
+  eating, satisfied, missed, recovered) in one image
+
+Regenerate and open both whenever the interaction, its timings, or Sprig's
+reactions change. Because the run uses live pointer events its exact pixels
+vary slightly between runs — it is review evidence, not a regression
+baseline; the deterministic `feed-*` fixtures cover regression.
 
 ## How the contact sheet is produced
 

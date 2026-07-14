@@ -77,5 +77,48 @@
     "query": "?state=idle&motion=reduced",
     "viewport": { "width": 393, "height": 851 },
     "reducedMotion": true
+  },
+  {
+    "name": "feed-ready",
+    "label": "Feed · snack ready · 393×851",
+    "query": "?state=feed-ready",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-hover",
+    "label": "Feed · snack near Sprig · 393×851",
+    "query": "?state=feed-hover",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-eaten",
+    "label": "Feed · eaten, satisfied · 393×851",
+    "query": "?state=feed-eaten",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-returning",
+    "label": "Feed · snack rolling back · 393×851",
+    "query": "?state=feed-returning",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-ready-narrow",
+    "label": "Feed · snack ready · narrow 320×568",
+    "query": "?state=feed-ready",
+    "viewport": { "width": 320, "height": 568 }
+  },
+  {
+    "name": "feed-ready-insets",
+    "label": "Feed · snack ready · simulated safe areas · 393×851",
+    "query": "?state=feed-ready&insets=1",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "feed-eaten-reduced",
+    "label": "Feed · eaten under reduced motion · 393×851",
+    "query": "?state=feed-eaten&motion=reduced",
+    "viewport": { "width": 393, "height": 851 },
+    "reducedMotion": true
   }
 ]
