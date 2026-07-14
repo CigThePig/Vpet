@@ -78,6 +78,72 @@ describe('care tray interaction', () => {
   });
 });
 
+describe('feeding interaction', () => {
+  it('activating Feed makes exactly one snack available and announces it', () => {
+    renderAt('');
+    fireEvent.click(screen.getByRole('button', { name: 'Feed' }));
+    expect(screen.getAllByRole('button', { name: /give snack to sprig/i })).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent(/snack is ready/i);
+  });
+
+  it('toggling Feed off puts the snack away', () => {
+    renderAt('');
+    const feed = screen.getByRole('button', { name: 'Feed' });
+    fireEvent.click(feed);
+    fireEvent.click(feed);
+    expect(screen.queryByRole('button', { name: /give snack/i })).not.toBeInTheDocument();
+  });
+
+  it('keyboard activation feeds Sprig exactly once and ends feed mode', () => {
+    vi.useFakeTimers();
+    try {
+      renderAt('?state=feed-ready');
+      const snack = screen.getByRole('button', { name: /give snack/i });
+      fireEvent.click(snack);
+      fireEvent.click(snack); // a second activation mid-flight must be ignored
+      act(() => {
+        vi.advanceTimersByTime(400); // flight completes → eating
+      });
+      expect(screen.queryByRole('button', { name: /give snack/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent(/eats the snack/i);
+      act(() => {
+        vi.advanceTimersByTime(3000); // munch + satisfied linger → feed over
+      });
+      expect(screen.getByRole('button', { name: 'Feed' })).toHaveAttribute('aria-pressed', 'false');
+      expect(screen.queryByRole('button', { name: /give snack/i })).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('switching to another category removes the snack', () => {
+    renderAt('?state=feed-ready');
+    fireEvent.click(screen.getByRole('button', { name: 'Play' }));
+    expect(screen.queryByRole('button', { name: /give snack/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('feed fixtures resolve to their presentation states', () => {
+    const { container, unmount } = renderAt('?state=feed-hover');
+    expect(container.querySelector('.creature')).toHaveAttribute('data-reaction', 'anticipate');
+    unmount();
+    const eaten = renderAt('?state=feed-eaten');
+    expect(eaten.container.querySelector('.creature')).toHaveAttribute(
+      'data-reaction',
+      'satisfied',
+    );
+    expect(screen.queryByRole('button', { name: /give snack/i })).not.toBeInTheDocument();
+  });
+
+  it('exposes a concise accessible description of Sprig', () => {
+    const { unmount } = renderAt('?state=feed-ready');
+    expect(screen.getByText(/sprig notices the snack/i)).toBeInTheDocument();
+    unmount();
+    renderAt('');
+    expect(screen.getByText(/sprig is calm/i)).toBeInTheDocument();
+  });
+});
+
 describe('screenshot-ready signal', () => {
   it('marks the document ready after the first painted frame', async () => {
     renderAt('');

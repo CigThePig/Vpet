@@ -18,6 +18,18 @@ export type TrayCategory = 'feed' | 'care' | 'play' | 'room';
 
 export const TRAY_CATEGORIES: readonly TrayCategory[] = ['feed', 'care', 'play', 'room'];
 
+/**
+ * Lifecycle of the one snack the Feed mode offers. Presentation only: each
+ * phase is a distinct, statically renderable frame (fixtures can start in any
+ * of them). Live gestures move between phases via the pure transitions in
+ * src/game/feed.ts.
+ *
+ *   none → ready → held ⇄ held-near → eating → eaten → none
+ *                    ↓ (released away)
+ *                 returning → ready
+ */
+export type SnackPhase = 'none' | 'ready' | 'held' | 'held-near' | 'returning' | 'eating' | 'eaten';
+
 /** Everything the habitat screen needs to render one deterministic frame. */
 export interface HabitatState {
   mood: Mood;
@@ -28,6 +40,8 @@ export interface HabitatState {
   dirty: boolean;
   /** Which tray category is active, or null when the tray is at rest. */
   activeTray: TrayCategory | null;
+  /** Where the Feed snack is in its lifecycle ('none' when Feed is inactive). */
+  snack: SnackPhase;
 }
 
 export const DEFAULT_HABITAT_STATE: HabitatState = {
@@ -36,4 +50,5 @@ export const DEFAULT_HABITAT_STATE: HabitatState = {
   sleeping: false,
   dirty: false,
   activeTray: null,
+  snack: 'none',
 };

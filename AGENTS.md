@@ -29,6 +29,32 @@ below are not optional ceremony — they are how quality is maintained here.
 9. **Do not claim completion because tests pass.** Completion means you have
    looked at the rendered result and it is visually correct.
 
+## Additional rules for gesture/interaction changes
+
+The feeding drag (`src/components/Snack.tsx` + `src/game/feed.ts`) is the
+reference pattern. When you add or modify a direct-manipulation interaction:
+
+- **Run the real interaction**, not just the fixtures: drive the actual
+  pointer path (Playwright `mouse.down/move/up`) and watch the result.
+  `npm run ux:motion` records the feed drag as a video + labelled filmstrip
+  in `ux/motion/` — extend it (or add a sibling script) for new gestures,
+  and open the artifacts. Frozen screenshots cannot show motion quality.
+- **Test the pointer path AND the keyboard path.** Every gesture needs a
+  keyboard/screen-reader equivalent that produces the same state transition
+  and the same announcement — a button activation, never a separate lesser
+  flow. At least one browser test must exercise the real pointer path (no
+  faking state).
+- **World objects, not menus.** New interactions live in the habitat as
+  physical objects. No modals, inventory grids, floating cards, or panels.
+- **Keep transitions pure and handler-driven.** State transitions belong in
+  pure functions (see `src/game/feed.ts`); timers start only from user
+  events, never from rendering a state — otherwise fixture-initialized
+  states drift and screenshots stop being deterministic.
+- **Preserve accessible state.** Sprig's condition is described by
+  `describeSprig` (visually hidden text); meaningful results are announced
+  once via the toast live region. Do not announce continuous pointer
+  movement.
+
 ## Hard rules
 
 Do **not**, without explicit maintainer direction:

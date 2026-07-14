@@ -64,6 +64,135 @@
   }
 }
 
+/* ---- Snack reactions ----------------------------------------------------------- */
+
+/*
+ * Eye tracking: --look-x/--look-y (−1..1) shift the pupils. The live drag
+ * writes them inline on the creature anchor; when it does not, each reaction
+ * falls back to a fixed gaze (--look-rest-*) pointing at the snack's resting
+ * or approach position, so fixtures render the same frame every time.
+ */
+.creature-pupils {
+  transform: translate(
+    calc(var(--look-x, var(--look-rest-x, 0)) * 5px),
+    calc(var(--look-y, var(--look-rest-y, 0)) * 4px)
+  );
+  transition: transform var(--duration-press) var(--ease-out);
+}
+
+.creature[data-reaction='notice'] {
+  --look-rest-x: -0.9;
+  --look-rest-y: 0.55;
+}
+
+.creature[data-reaction='anticipate'] {
+  --look-rest-x: -0.55;
+  --look-rest-y: 0.3;
+}
+
+.creature[data-reaction='missed'] {
+  --look-rest-x: -0.8;
+  --look-rest-y: 0.5;
+}
+
+/* Whole-body posture answers the snack. Applied on the outer element so it
+   never fights the breathing animation on .creature-body-group. */
+.creature {
+  transform-origin: 50% 100%;
+  transition: transform var(--duration-state) var(--ease-spring);
+}
+
+.creature[data-reaction='anticipate'] {
+  transform: translateY(-4px) rotate(-2deg) scale(1.015);
+}
+
+.creature[data-reaction='missed'] {
+  transform: rotate(-1.2deg);
+}
+
+/* The sprout perks up when food comes close, bounces once when satisfied. */
+.creature[data-reaction='anticipate'] .creature-leaf {
+  transform: rotate(-9deg) scale(1.12);
+}
+
+.creature[data-reaction='satisfied'] .creature-leaf {
+  animation: leaf-happy 0.7s var(--ease-spring) 2;
+}
+
+@keyframes leaf-happy {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  40% {
+    transform: rotate(-10deg) scale(1.14);
+  }
+}
+
+/* Munching: the mouth works, the body gives a tiny contented rock. */
+.creature[data-reaction='eating'] .creature-chew {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: chew 0.36s ease-in-out infinite alternate;
+}
+
+@keyframes chew {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0.45);
+  }
+}
+
+.creature[data-reaction='eating'] .creature-svg {
+  animation: eat-rock 0.72s ease-in-out infinite;
+}
+
+@keyframes eat-rock {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-1.4deg);
+  }
+  75% {
+    transform: rotate(1.4deg);
+  }
+}
+
+/* Satisfied: one soft happy sway (finite, screenshot-safe). */
+.creature[data-reaction='satisfied'] .creature-svg {
+  animation: satisfied-sway 1.4s var(--ease-spring) 1;
+}
+
+@keyframes satisfied-sway {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+  60% {
+    transform: translateY(-1px) rotate(-0.6deg);
+  }
+}
+
+.creature-crumbs {
+  animation: crumbs-in var(--duration-state) var(--ease-out);
+}
+
+@keyframes crumbs-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .creature-zzz text {
   animation: zzz-rise 3.6s ease-in-out infinite;
 }

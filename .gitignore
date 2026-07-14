@@ -8,6 +8,7 @@ dist/
 ux/current/
 ux/diffs/
 ux/reports/
+ux/motion/
 
 # playwright
 test-results/

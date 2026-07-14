@@ -8,7 +8,8 @@ import { isFixtureName } from '../game/fixtures';
  * into an exact, reproducible visual state (they also drive the Playwright
  * screenshot harness):
  *
- *   ?state=idle|happy|hungry|tired|dirty|night|care-tray   visual fixture
+ *   ?state=idle|happy|hungry|tired|dirty|night|care-tray
+ *         |feed-ready|feed-hover|feed-eaten|feed-returning  visual fixture
  *   ?debug=touch-targets                                    outline all hit areas
  *   ?motion=reduced                                         force reduced motion
  *   ?insets=1                                               simulate device safe areas

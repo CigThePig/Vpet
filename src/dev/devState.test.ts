@@ -7,7 +7,19 @@ describe('parseDevOptions', () => {
   });
 
   it('selects each known fixture', () => {
-    for (const name of ['idle', 'happy', 'hungry', 'tired', 'dirty', 'night', 'care-tray']) {
+    for (const name of [
+      'idle',
+      'happy',
+      'hungry',
+      'tired',
+      'dirty',
+      'night',
+      'care-tray',
+      'feed-ready',
+      'feed-hover',
+      'feed-eaten',
+      'feed-returning',
+    ]) {
       expect(parseDevOptions(`?state=${name}`).fixture).toBe(name);
     }
   });
