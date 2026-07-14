@@ -1,0 +1,34 @@
+.app-shell {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg-app);
+  transition: background var(--duration-drift) var(--ease-out);
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Desktop development frame: on wide screens, present the mobile composition
+   inside a centred, rounded "device" so the intended portrait layout is never
+   distorted. Phones and Playwright emulation are unaffected. */
+@media (min-width: 700px) and (min-height: 500px) {
+  .app-shell {
+    display: grid;
+    place-items: center;
+  }
+
+  .stage {
+    position: relative;
+    inset: auto;
+    width: min(420px, 92vw);
+    height: min(880px, 94vh);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--color-surface-border);
+  }
+}

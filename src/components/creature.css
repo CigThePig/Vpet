@@ -1,0 +1,92 @@
+.creature {
+  position: relative;
+  width: 100%;
+}
+
+.creature-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The habitat cools at night; the creature dims with the room. */
+.creature[data-time='night'] .creature-svg {
+  filter: brightness(0.86) saturate(0.92);
+}
+
+/* ---- Ambient life ------------------------------------------------------------ */
+
+.creature-body-group {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: creature-breathe calc(var(--duration-ambient) * 0.85) ease-in-out infinite alternate;
+}
+
+@keyframes creature-breathe {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.022);
+  }
+}
+
+.creature[data-mood='happy'] .creature-svg {
+  animation: creature-bounce 1.8s var(--ease-spring) infinite;
+}
+
+@keyframes creature-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-7px);
+  }
+  55% {
+    transform: translateY(0);
+  }
+}
+
+.creature-leaf {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform var(--duration-state) var(--ease-spring);
+  animation: leaf-wiggle calc(var(--duration-ambient) * 1.2) ease-in-out infinite alternate;
+}
+
+@keyframes leaf-wiggle {
+  from {
+    rotate: -2deg;
+  }
+  to {
+    rotate: 2.5deg;
+  }
+}
+
+.creature-zzz text {
+  animation: zzz-rise 3.6s ease-in-out infinite;
+}
+
+.creature-zzz text:nth-child(2) {
+  animation-delay: -1.2s;
+}
+
+.creature-zzz text:nth-child(3) {
+  animation-delay: -2.4s;
+}
+
+@keyframes zzz-rise {
+  0% {
+    opacity: 0.15;
+    transform: translateY(3px);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+  100% {
+    opacity: 0.15;
+    transform: translateY(3px);
+  }
+}
