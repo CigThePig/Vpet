@@ -138,5 +138,23 @@
     "query": "?state=feed-eaten&motion=reduced",
     "viewport": { "width": 393, "height": 851 },
     "reducedMotion": true
+  },
+  {
+    "name": "pet-ready",
+    "label": "Pet · hoping for the hand · 393×851",
+    "query": "?state=pet-ready",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "pet-stroking",
+    "label": "Pet · leaning into the strokes · 393×851",
+    "query": "?state=pet-stroking",
+    "viewport": { "width": 393, "height": 851 }
+  },
+  {
+    "name": "pet-bliss",
+    "label": "Pet · blissful, hearts drifting · 393×851",
+    "query": "?state=pet-bliss",
+    "viewport": { "width": 393, "height": 851 }
   }
 ]

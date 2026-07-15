@@ -169,3 +169,25 @@ physics library (one ball on one plane doesn't need one); keeping the
 glide-home (explicitly the behaviour being replaced); making the continuous
 landing position part of `HabitatState` (fixtures stay enumerable — live
 position lives in the Snack component; fixtures render canonical poses).
+
+## D18 — Petting: Sprig itself is the world object, stroke warmth stays live
+
+The Care category follows the feeding pattern exactly — `HabitatState` gained
+`petting: PetPhase` (`none → ready ⇄ stroking → bliss`) with pure guarded
+transitions in `src/game/pet.ts` — but there is nothing to carry: the
+interactive surface is Sprig. A `PetZone` button (invisible, creature-sized)
+sits over the creature anchor; it must live outside the aria-hidden habitat
+artwork, so its CSS placement mirrors `.creature-anchor`. Stroking writes
+only a `--pet-x` lean variable to the DOM (Sprig leans toward the hand, eyes
+closed, blush deepened); accumulated stroke distance lives in the component
+and carries across presses within one Care session, and enough of it melts
+Sprig into `bliss` (grin, wiggle, two muted floating hearts) before Care
+winds down. A press that never travels — tap, VoiceOver double-tap, keyboard
+Enter/Space — is a pat: savoured briefly, then the same bliss, the same
+announcement (D15 equivalence). Feeding and petting stay mutually exclusive
+by composing `endFeed`/`endPetting` on every tray change; both modes share
+one interaction-timer pool so neither can leak timers into the other.
+**Rejected:** stroke progress in `HabitatState` (fixtures stay enumerable);
+a visible affordance overlay on Sprig (the toast + Sprig's hopeful pose
+carry it; decoration stays restrained); circular-gesture recognition
+(distance-based warmth reads every honest stroke shape, including circles).

@@ -1,0 +1,37 @@
+/*
+ * The pettable area over Sprig: an invisible touch surface, not UI chrome.
+ * Its placement mirrors .creature-anchor (habitat.css) exactly — the anchor
+ * lives inside the aria-hidden habitat artwork, so the interactive button
+ * must sit outside it in the stage, at the same spot. The creature SVG
+ * viewBox is 220×200, hence the aspect ratio.
+ */
+
+.pet-zone {
+  position: absolute;
+  z-index: var(--z-snack);
+  left: 50%;
+  bottom: 20%;
+  transform: translateX(-50%);
+  width: clamp(150px, min(52vw, 40vh), 240px);
+  aspect-ratio: 220 / 200;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  touch-action: none; /* the stroke must never scroll or pull-to-refresh */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pet-zone:active {
+  cursor: grabbing;
+}
+
+/* Landscape: follow the creature's shifted anchor. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .pet-zone {
+    left: 45%;
+    bottom: 12%;
+    width: clamp(130px, 36vh, 190px);
+  }
+}

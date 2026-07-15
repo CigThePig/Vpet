@@ -23,7 +23,10 @@ export type FixtureName =
   | 'feed-perched'
   | 'feed-gobbling'
   | 'feed-teased'
-  | 'feed-yearning';
+  | 'feed-yearning'
+  | 'pet-ready'
+  | 'pet-stroking'
+  | 'pet-bliss';
 
 export const FIXTURES: Record<FixtureName, HabitatState> = {
   idle: { ...DEFAULT_HABITAT_STATE },
@@ -54,6 +57,13 @@ export const FIXTURES: Record<FixtureName, HabitatState> = {
     snack: 'ready',
     flourish: 'yearning',
   },
+  // Petting interaction, frozen at its three visually distinct moments.
+  // Same determinism contract as the feed fixtures: App timers only start
+  // from live events, so none of these auto-advance; the stroking lean
+  // renders its centred default because no live gesture writes --pet-x.
+  'pet-ready': { ...DEFAULT_HABITAT_STATE, activeTray: 'care', petting: 'ready' },
+  'pet-stroking': { ...DEFAULT_HABITAT_STATE, activeTray: 'care', petting: 'stroking' },
+  'pet-bliss': { ...DEFAULT_HABITAT_STATE, activeTray: 'care', petting: 'bliss' },
 };
 
 export const FIXTURE_NAMES = Object.keys(FIXTURES) as FixtureName[];

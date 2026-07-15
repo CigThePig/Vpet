@@ -166,6 +166,18 @@ export function effectiveReaction(state: HabitatState): SnackReaction {
  * the toast; this describes the current state for readers who look.
  */
 export function describeSprig(state: HabitatState): string {
+  // Petting and feeding are mutually exclusive (one tray category at a time),
+  // so the petting moments can simply be described first.
+  switch (state.petting) {
+    case 'ready':
+      return 'Sprig leans in, hoping to be petted.';
+    case 'stroking':
+      return 'Sprig closes its eyes and leans into the petting.';
+    case 'bliss':
+      return 'Sprig is blissful from all the petting.';
+    case 'none':
+      break;
+  }
   switch (effectiveReaction(state)) {
     case 'notice':
       return 'Sprig notices the snack.';

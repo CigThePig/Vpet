@@ -274,6 +274,90 @@
   }
 }
 
+/* ---- Petting reactions --------------------------------------------------------- */
+
+/* Hoping for the hand: perk up a touch and look right at the player. */
+.creature[data-reaction='pet-ready'] {
+  --look-rest-x: 0;
+  --look-rest-y: -0.15;
+  transform: translateY(-2px) scale(1.01);
+}
+
+.creature[data-reaction='pet-ready'] .creature-leaf {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+/*
+ * Being petted: Sprig leans into the hand. --pet-x (−1..1, the stroke's
+ * horizontal position over Sprig) is written inline on the creature anchor
+ * by the live gesture; fixtures render the centred default.
+ */
+.creature[data-reaction='pet-stroking'] {
+  transform: rotate(calc(var(--pet-x, 0) * 5deg)) translateY(2px) scaleY(0.985);
+}
+
+.creature[data-reaction='pet-stroking'] .creature-leaf {
+  transform: rotate(10deg) scale(0.97);
+}
+
+/* The blush deepens under the hand. */
+.creature-blush ellipse {
+  transition: opacity var(--duration-state) var(--ease-out);
+}
+
+.creature[data-reaction='pet-stroking'] .creature-blush ellipse,
+.creature[data-reaction='pet-bliss'] .creature-blush ellipse {
+  opacity: 0.58;
+}
+
+/* Bliss: one happy wiggle (finite, screenshot-safe) and a perked sprout. */
+.creature[data-reaction='pet-bliss'] .creature-svg {
+  animation: bliss-wiggle 1.2s var(--ease-spring) 2;
+}
+
+@keyframes bliss-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  30% {
+    transform: rotate(-2.2deg) translateY(-5px);
+  }
+  70% {
+    transform: rotate(2deg) translateY(-1px);
+  }
+}
+
+.creature[data-reaction='pet-bliss'] .creature-leaf {
+  animation: leaf-happy 0.7s var(--ease-spring) 2;
+}
+
+/* Hearts drift up and fade, like the sleep zzz. */
+.creature-hearts path {
+  animation: heart-float 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.creature-hearts g:nth-child(2) path {
+  animation-delay: -1.4s;
+}
+
+@keyframes heart-float {
+  0% {
+    opacity: 0.2;
+    transform: translateY(4px) scale(0.9);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateY(-3px) scale(1);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateY(4px) scale(0.9);
+  }
+}
+
 .creature-crumbs {
   animation: crumbs-in var(--duration-state) var(--ease-out);
 }

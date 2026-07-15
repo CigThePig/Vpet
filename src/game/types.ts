@@ -43,6 +43,17 @@ export type SnackPhase =
  */
 export type FeedFlourish = 'none' | 'teased' | 'yearning';
 
+/**
+ * Lifecycle of the petting interaction the Care mode offers. Presentation
+ * only, like the snack: each phase is a distinct, statically renderable
+ * frame. Live gestures move between phases via the pure transitions in
+ * src/game/pet.ts.
+ *
+ *   none → ready ⇄ stroking → bliss → none
+ *            (hand rests)  (enough strokes / a pat)
+ */
+export type PetPhase = 'none' | 'ready' | 'stroking' | 'bliss';
+
 /** Everything the habitat screen needs to render one deterministic frame. */
 export interface HabitatState {
   mood: Mood;
@@ -57,6 +68,8 @@ export interface HabitatState {
   snack: SnackPhase;
   /** Transient snack-play emotion (teased/yearning) layered over the phase. */
   flourish: FeedFlourish;
+  /** Where the Care petting is in its lifecycle ('none' when Care is inactive). */
+  petting: PetPhase;
 }
 
 export const DEFAULT_HABITAT_STATE: HabitatState = {
@@ -67,4 +80,5 @@ export const DEFAULT_HABITAT_STATE: HabitatState = {
   activeTray: null,
   snack: 'none',
   flourish: 'none',
+  petting: 'none',
 };
