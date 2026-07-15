@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import type { HabitatState, TimeOfDay } from '../game/types';
 import { effectiveReaction } from '../game/feed';
+import { petReaction } from '../game/pet';
 import { Creature } from './Creature';
 import './habitat.css';
 
@@ -34,7 +35,11 @@ export function Habitat({ state, creatureAnchorRef }: HabitatProps) {
           sleeping={state.sleeping}
           dirty={state.dirty}
           time={timeOfDay}
-          reaction={effectiveReaction(state)}
+          // Petting and feeding are mutually exclusive (one tray category at
+          // a time), so whichever interaction is live provides the reaction.
+          reaction={
+            state.petting !== 'none' ? petReaction(state.petting) : effectiveReaction(state)
+          }
         />
       </div>
       <AmbientMotes time={timeOfDay} />

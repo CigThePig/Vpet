@@ -144,6 +144,71 @@ describe('feeding interaction', () => {
   });
 });
 
+describe('petting interaction', () => {
+  it('activating Care makes Sprig pettable and announces it', () => {
+    renderAt('');
+    fireEvent.click(screen.getByRole('button', { name: 'Care' }));
+    expect(screen.getAllByRole('button', { name: /pet sprig/i })).toHaveLength(1);
+    expect(screen.getByRole('status')).toHaveTextContent(/hoping to be petted/i);
+  });
+
+  it('toggling Care off settles Sprig back down', () => {
+    renderAt('');
+    const care = screen.getByRole('button', { name: 'Care' });
+    fireEvent.click(care);
+    fireEvent.click(care);
+    expect(screen.queryByRole('button', { name: /pet sprig/i })).not.toBeInTheDocument();
+    expect(care).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('keyboard activation pats Sprig into bliss exactly once and ends Care', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = renderAt('?state=pet-ready');
+      const zone = screen.getByRole('button', { name: /pet sprig/i });
+      fireEvent.click(zone);
+      fireEvent.click(zone); // a second activation mid-pat must be ignored
+      expect(container.querySelector('.creature')).toHaveAttribute('data-reaction', 'pet-stroking');
+      act(() => {
+        vi.advanceTimersByTime(800); // the pat is savoured → bliss
+      });
+      expect(screen.queryByRole('button', { name: /pet sprig/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent(/melts into the petting/i);
+      expect(container.querySelector('.creature')).toHaveAttribute('data-reaction', 'pet-bliss');
+      act(() => {
+        vi.advanceTimersByTime(2100); // blissful linger → care over
+      });
+      expect(screen.getByRole('button', { name: 'Care' })).toHaveAttribute('aria-pressed', 'false');
+      expect(container.querySelector('.creature')).toHaveAttribute('data-reaction', 'none');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('switching between Feed and Care never leaves both interactions active', () => {
+    renderAt('?state=feed-ready');
+    fireEvent.click(screen.getByRole('button', { name: 'Care' }));
+    expect(screen.queryByRole('button', { name: /give snack/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /pet sprig/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Feed' }));
+    expect(screen.queryByRole('button', { name: /pet sprig/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /give snack/i })).toBeInTheDocument();
+  });
+
+  it('pet fixtures resolve to their presentation states', () => {
+    const { container, unmount } = renderAt('?state=pet-stroking');
+    expect(container.querySelector('.creature')).toHaveAttribute('data-reaction', 'pet-stroking');
+    unmount();
+    const bliss = renderAt('?state=pet-bliss');
+    expect(bliss.container.querySelector('.creature')).toHaveAttribute(
+      'data-reaction',
+      'pet-bliss',
+    );
+    expect(screen.queryByRole('button', { name: /pet sprig/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/blissful/i)).toBeInTheDocument();
+  });
+});
+
 describe('screenshot-ready signal', () => {
   it('marks the document ready after the first painted frame', async () => {
     renderAt('');

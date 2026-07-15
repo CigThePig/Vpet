@@ -10,7 +10,8 @@ import { isFixtureName } from '../game/fixtures';
  *
  *   ?state=idle|happy|hungry|tired|dirty|night|care-tray
  *         |feed-ready|feed-hover|feed-eaten|feed-perched
- *         |feed-gobbling|feed-teased|feed-yearning          visual fixture
+ *         |feed-gobbling|feed-teased|feed-yearning
+ *         |pet-ready|pet-stroking|pet-bliss                 visual fixture
  *   ?debug=touch-targets                                    outline all hit areas
  *   ?motion=reduced                                         force reduced motion
  *   ?insets=1                                               simulate device safe areas

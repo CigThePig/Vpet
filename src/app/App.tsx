@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Habitat } from '../components/Habitat';
 import { CareTray } from '../components/CareTray';
 import { Snack } from '../components/Snack';
+import { PetZone } from '../components/PetZone';
 import { Toast } from '../components/Toast';
 import { JournalButton } from '../components/JournalButton';
 import { DevPanel } from '../dev/DevPanel';
@@ -21,18 +22,18 @@ import {
   shakeOffSnack,
   startFeed,
 } from '../game/feed';
+import { beginStroke, blissOut, endPetting, restHand, startPetting } from '../game/pet';
 import type { HabitatState, TrayCategory } from '../game/types';
 import './app.css';
 
-const TRAY_MESSAGES: Record<Exclude<TrayCategory, 'feed'>, string> = {
-  care: 'Grooming and comfort come later — Sprig leans in hopefully.',
+const TRAY_MESSAGES: Record<Exclude<TrayCategory, 'feed' | 'care'>, string> = {
   play: 'Toys are on their way — the little leaf perks up.',
   room: 'Room decorating opens later — Sprig surveys the den.',
 };
 
-// Live feeding timings (ms). Timers only ever start from user events, never
-// from rendering a state — that is what keeps fixture-initialized phases
-// (feed-hover, feed-perched, …) frozen for deterministic screenshots.
+// Live interaction timings (ms). Timers only ever start from user events,
+// never from rendering a state — that is what keeps fixture-initialized
+// phases (feed-hover, pet-stroking, …) frozen for deterministic screenshots.
 const FLIGHT_MS = 340; // tap/keyboard give: the snack's glide to Sprig
 const EAT_MS = 1100; // munching
 const GOBBLE_MS = 1300; // bowing down + eating off the floor
@@ -42,6 +43,8 @@ const TEASE_MS = 1600; // how long the cheek-puff pout lasts
 const YEARN_DELAY_MS = 3500; // resting berry → first hopeful reach
 const YEARN_HOLD_MS = 1200; // how long each reach lasts
 const YEARN_GAP_MS = 5000; // pause between reaches
+const PAT_MS = 750; // a pat (tap/keyboard) is savoured briefly before bliss
+const BLISS_MS = 2000; // blissful linger before Care mode ends
 
 export function App() {
   const dev = useMemo(() => parseDevOptions(window.location.search), []);
@@ -54,11 +57,15 @@ export function App() {
   const habitatRef = useRef(habitat);
   habitatRef.current = habitat;
 
-  const feedTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // One shared pool for all interaction timers (feeding and petting): a tray
+  // change clears everything, so modes can never leak timers into each other.
+  const interactionTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const yearnTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const creatureAnchorRef = useRef<HTMLDivElement | null>(null);
   const snackRef = useRef<HTMLButtonElement | null>(null);
+  const petZoneRef = useRef<HTMLButtonElement | null>(null);
   const feedButtonRef = useRef<HTMLButtonElement | null>(null);
+  const careButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const reducedMotion = useMemo(
     () =>
@@ -73,15 +80,15 @@ export function App() {
     yearnTimers.current = [];
   }, []);
 
-  const clearFeedTimers = useCallback(() => {
-    for (const t of feedTimers.current) clearTimeout(t);
-    feedTimers.current = [];
+  const clearInteractionTimers = useCallback(() => {
+    for (const t of interactionTimers.current) clearTimeout(t);
+    interactionTimers.current = [];
     clearYearnTimers();
   }, [clearYearnTimers]);
-  useEffect(() => clearFeedTimers, [clearFeedTimers]);
+  useEffect(() => clearInteractionTimers, [clearInteractionTimers]);
 
-  const scheduleFeed = useCallback((delay: number, fn: () => void) => {
-    feedTimers.current.push(setTimeout(fn, delay));
+  const scheduleInteraction = useCallback((delay: number, fn: () => void) => {
+    interactionTimers.current.push(setTimeout(fn, delay));
   }, []);
 
   const showToast = useCallback((message: string) => {
@@ -94,6 +101,13 @@ export function App() {
   const rescueFocusFromSnack = useCallback(() => {
     if (document.activeElement === snackRef.current) {
       requestAnimationFrame(() => feedButtonRef.current?.focus());
+    }
+  }, []);
+
+  /** If focus is on the pet zone (about to disappear), move it to Care. */
+  const rescueFocusFromPetZone = useCallback(() => {
+    if (document.activeElement === petZoneRef.current) {
+      requestAnimationFrame(() => careButtonRef.current?.focus());
     }
   }, []);
 
@@ -121,23 +135,24 @@ export function App() {
   const runEatingSequence = useCallback(
     (munchMs: number) => {
       showToast('Sprig eats the snack and looks happy.');
-      scheduleFeed(munchMs, () => setHabitat(finishEating));
-      scheduleFeed(munchMs + LINGER_MS, () => setHabitat(endFeed));
+      scheduleInteraction(munchMs, () => setHabitat(finishEating));
+      scheduleInteraction(munchMs + LINGER_MS, () => setHabitat(endFeed));
     },
-    [scheduleFeed, showToast],
+    [scheduleInteraction, showToast],
   );
 
   const handleTraySelect = useCallback(
     (category: TrayCategory) => {
       const current = habitatRef.current;
-      clearFeedTimers();
+      clearInteractionTimers();
       if (category === 'feed') {
         if (current.activeTray === 'feed') {
           rescueFocusFromSnack();
           setHabitat(endFeed(current));
           showToast('The snack is put away.');
         } else {
-          setHabitat(startFeed(current));
+          rescueFocusFromPetZone();
+          setHabitat(startFeed(endPetting(current)));
           showToast('A snack is ready for Sprig.');
           startYearnLoop();
           // The snack is the interaction; hand it focus so keyboard and
@@ -146,12 +161,34 @@ export function App() {
         }
         return;
       }
+      if (category === 'care') {
+        if (current.activeTray === 'care') {
+          rescueFocusFromPetZone();
+          setHabitat(endPetting(current));
+          showToast('Sprig settles back down.');
+        } else {
+          rescueFocusFromSnack();
+          setHabitat(startPetting(endFeed(current)));
+          showToast('Sprig leans in, hoping to be petted.');
+          // Sprig is the interaction; hand focus to the pettable area so
+          // keyboard and screen-reader users land on it directly.
+          requestAnimationFrame(() => petZoneRef.current?.focus());
+        }
+        return;
+      }
       rescueFocusFromSnack();
-      const base = endFeed(current);
+      rescueFocusFromPetZone();
+      const base = endPetting(endFeed(current));
       setHabitat({ ...base, activeTray: base.activeTray === category ? null : category });
       showToast(TRAY_MESSAGES[category]);
     },
-    [clearFeedTimers, rescueFocusFromSnack, showToast, startYearnLoop],
+    [
+      clearInteractionTimers,
+      rescueFocusFromPetZone,
+      rescueFocusFromSnack,
+      showToast,
+      startYearnLoop,
+    ],
   );
 
   // ---- Snack gesture wiring ------------------------------------------------
@@ -180,8 +217,8 @@ export function App() {
     if (next === habitatRef.current) return;
     setHabitat(next);
     showToast('The berry balances on Sprig’s head.');
-    scheduleFeed(PERCH_MS, () => setHabitat(shakeOffSnack));
-  }, [scheduleFeed, showToast]);
+    scheduleInteraction(PERCH_MS, () => setHabitat(shakeOffSnack));
+  }, [scheduleInteraction, showToast]);
 
   /** Released anywhere else: the berry drops and tumbles (physics in Snack). */
   const handleSnackDropped = useCallback(() => {
@@ -212,10 +249,10 @@ export function App() {
     const next = setFlourish(habitatRef.current, 'teased');
     if (next === habitatRef.current) return;
     setHabitat(next);
-    scheduleFeed(TEASE_MS, () =>
+    scheduleInteraction(TEASE_MS, () =>
       setHabitat((s) => (s.flourish === 'teased' ? setFlourish(s, 'none') : s)),
     );
-  }, [scheduleFeed]);
+  }, [scheduleInteraction]);
 
   /** Tap or keyboard activation: the snack glides to Sprig by itself. */
   const handleSnackGive = useCallback(() => {
@@ -224,22 +261,76 @@ export function App() {
       return;
     clearYearnTimers();
     setHabitat({ ...current, snack: 'held-near', flourish: 'none' });
-    scheduleFeed(FLIGHT_MS, () => {
+    scheduleInteraction(FLIGHT_MS, () => {
       const next = releaseSnack(habitatRef.current);
       if (next === habitatRef.current) return;
       rescueFocusFromSnack();
       setHabitat(next);
       runEatingSequence(EAT_MS);
     });
-  }, [clearYearnTimers, rescueFocusFromSnack, runEatingSequence, scheduleFeed]);
+  }, [clearYearnTimers, rescueFocusFromSnack, runEatingSequence, scheduleInteraction]);
 
   /** Escape on the resting snack: leave Feed mode, focus returns to Feed. */
   const handleSnackDismiss = useCallback(() => {
-    clearFeedTimers();
+    clearInteractionTimers();
     rescueFocusFromSnack();
     setHabitat(endFeed(habitatRef.current));
     showToast('The snack is put away.');
-  }, [clearFeedTimers, rescueFocusFromSnack, showToast]);
+  }, [clearInteractionTimers, rescueFocusFromSnack, showToast]);
+
+  // ---- Petting gesture wiring ------------------------------------------------
+
+  /** bliss → care mode over. Started only from live events. */
+  const runBlissSequence = useCallback(() => {
+    const next = blissOut(habitatRef.current);
+    if (next === habitatRef.current) return;
+    rescueFocusFromPetZone();
+    setHabitat(next);
+    showToast('Sprig melts into the petting.');
+    scheduleInteraction(BLISS_MS, () => setHabitat(endPetting));
+  }, [rescueFocusFromPetZone, scheduleInteraction, showToast]);
+
+  const handlePetBegin = useCallback(() => {
+    setHabitat(beginStroke(habitatRef.current));
+  }, []);
+
+  const handlePetRest = useCallback(() => {
+    setHabitat(restHand(habitatRef.current));
+  }, []);
+
+  /** Sprig leans toward the stroking hand; null clears to the pose default. */
+  const handlePetStroke = useCallback((x: number | null) => {
+    const anchor = creatureAnchorRef.current;
+    if (!anchor) return;
+    if (x == null) {
+      anchor.style.removeProperty('--pet-x');
+    } else {
+      anchor.style.setProperty('--pet-x', x.toFixed(3));
+    }
+  }, []);
+
+  /** Tap or keyboard activation: a single pat, savoured, then bliss. */
+  const handlePetPat = useCallback(() => {
+    const current = habitatRef.current;
+    if (current.petting !== 'ready' && current.petting !== 'stroking') return;
+    setHabitat(beginStroke(current));
+    scheduleInteraction(PAT_MS, runBlissSequence);
+  }, [runBlissSequence, scheduleInteraction]);
+
+  /** Escape on the pettable area: leave Care mode, focus returns to Care. */
+  const handlePetDismiss = useCallback(() => {
+    clearInteractionTimers();
+    rescueFocusFromPetZone();
+    setHabitat(endPetting(habitatRef.current));
+    showToast('Sprig settles back down.');
+  }, [clearInteractionTimers, rescueFocusFromPetZone, showToast]);
+
+  // Clear any lingering lean once nothing is being stroked.
+  useEffect(() => {
+    if (habitat.petting !== 'stroking') {
+      creatureAnchorRef.current?.style.removeProperty('--pet-x');
+    }
+  }, [habitat.petting]);
 
   // The feeding area is Sprig's visible body, not the full anchor box (the
   // SVG viewBox has generous horizontal padding; using it raw would make the
@@ -296,6 +387,8 @@ export function App() {
 
   const snackVisible =
     habitat.snack !== 'none' && habitat.snack !== 'eating' && habitat.snack !== 'eaten';
+  // Blissed-out Sprig is done being petted: the zone leaves with the phase.
+  const petZoneVisible = habitat.petting === 'ready' || habitat.petting === 'stroking';
 
   return (
     <div
@@ -327,9 +420,26 @@ export function App() {
             buttonRef={snackRef}
           />
         )}
+        {petZoneVisible && (
+          <PetZone
+            phase={habitat.petting}
+            onBegin={handlePetBegin}
+            onStroke={handlePetStroke}
+            onRest={handlePetRest}
+            onBliss={runBlissSequence}
+            onPat={handlePetPat}
+            onDismiss={handlePetDismiss}
+            buttonRef={petZoneRef}
+          />
+        )}
         <JournalButton onActivate={handleJournal} />
         <Toast message={toast} />
-        <CareTray active={habitat.activeTray} onSelect={handleTraySelect} feedRef={feedButtonRef} />
+        <CareTray
+          active={habitat.activeTray}
+          onSelect={handleTraySelect}
+          feedRef={feedButtonRef}
+          careRef={careButtonRef}
+        />
       </main>
       {dev.debugTouchTargets && (
         <div className="touch-target-legend">

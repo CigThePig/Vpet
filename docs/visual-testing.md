@@ -4,9 +4,10 @@
 
 The app never renders from timers or randomness. `?state=<name>` selects a
 fixture from `src/game/fixtures.ts` (`idle`, `happy`, `hungry`, `tired`,
-`dirty`, `night`, `care-tray`, plus the feeding moments `feed-ready`,
+`dirty`, `night`, `care-tray`, the feeding moments `feed-ready`,
 `feed-hover`, `feed-eaten`, `feed-perched`, `feed-gobbling`, `feed-teased`,
-`feed-yearning`), which fully determines the frame. Extra parameters compose
+`feed-yearning`, plus the petting moments `pet-ready`, `pet-stroking`,
+`pet-bliss`), which fully determines the frame. Extra parameters compose
 with it:
 
 | Parameter              | Effect                                      |
@@ -25,27 +26,31 @@ committed and painted its first frame it sets `data-app-ready="true"` on
 
 `npm run ux:capture` (`scripts/capture.mjs`) starts an in-process Vite dev
 server, launches the pinned Playwright Chromium, and renders every entry of
-`tests/visual/scenarios.json` (23 scenarios: three idle viewports, all moods,
+`tests/visual/scenarios.json` (26 scenarios: three idle viewports, all moods,
 night, care-tray, touch-target overlay, simulated insets, landscape, reduced
-motion, and ten feeding states covering ready / near / eaten / perched /
-gobbling / teased / yearning plus narrow, inset and reduced-motion variants).
+motion, ten feeding states covering ready / near / eaten / perched /
+gobbling / teased / yearning plus narrow, inset and reduced-motion variants,
+and three petting states covering ready / stroking / bliss).
 Each page is captured with
 `animations: 'disabled'` (CSS animations rewound to a deterministic state) at
 deviceScaleFactor 2, using system fonts only. Output: `ux/current/<name>.png`
 plus `ux/current/manifest.json`.
 
-### How feeding fixtures stay deterministic
+### How interaction fixtures stay deterministic
 
-The feed fixtures freeze the snack lifecycle mid-interaction without a real
-pointer: fixture-initialized phases never auto-advance because the app's
-feeding timers start only from user events, and the Snack component renders
-`held-near`/`perched`/`gobbling` phases at fixed CSS poses when no live
-gesture has run. `feed-perched` therefore always shows the same
+The feed and pet fixtures freeze their lifecycles mid-interaction without a
+real pointer: fixture-initialized phases never auto-advance because the app's
+interaction timers start only from user events, and the Snack component
+renders `held-near`/`perched`/`gobbling` phases at fixed CSS poses when no
+live gesture has run. `feed-perched` therefore always shows the same
 balanced-berry frame (never shaken off), and `feed-yearning` the same
 arms-raised reach. The drop-and-roll physics (`falling`) is live-only and is
-covered by the motion artifact, not by a frozen fixture.
+covered by the motion artifact, not by a frozen fixture. Likewise
+`pet-stroking` renders the centred lean (the live `--pet-x` stroke variable
+is never written by a fixture) and `pet-bliss` never winds Care down by
+itself.
 
-## Motion evidence (`npm run ux:motion`)
+## Motion evidence (`npm run ux:motion`, `npm run ux:motion:pet`)
 
 Frozen screenshots show composition, not feel. `scripts/capture-motion.mjs`
 drives the REAL feeding interaction (drag-feed, a missed drop with the full
@@ -58,10 +63,15 @@ gobble) against the dev server and writes two git-ignored artifacts to
   eating, satisfied, tumble, rest-where-landed, teased, perched, shaken off,
   gobbling) in one image
 
-Regenerate and open both whenever the interaction, its timings, or Sprig's
-reactions change. Because the run uses live pointer events its exact pixels
-vary slightly between runs — it is review evidence, not a regression
-baseline; the deterministic `feed-*` fixtures cover regression.
+Its sibling `scripts/capture-pet-motion.mjs` (`npm run ux:motion:pet`) does
+the same for the petting strokes (`pet-strokes.webm` + `pet-filmstrip.png`:
+hopeful, stroke begins, lean left/right, rest, bliss, wind-down, keyboard
+pat).
+
+Regenerate and open them whenever an interaction, its timings, or Sprig's
+reactions change. Because the runs use live pointer events their exact pixels
+vary slightly between runs — they are review evidence, not a regression
+baseline; the deterministic `feed-*`/`pet-*` fixtures cover regression.
 
 ## How the contact sheet is produced
 

@@ -1,14 +1,18 @@
 import type { Mood, TimeOfDay } from '../game/types';
 import type { SnackReaction } from '../game/feed';
+import type { PetReaction } from '../game/pet';
 import './creature.css';
+
+/** Any live interaction response — feeding or petting — Sprig can show. */
+export type CreatureReaction = SnackReaction | PetReaction;
 
 interface CreatureProps {
   mood: Mood;
   sleeping: boolean;
   dirty: boolean;
   time: TimeOfDay;
-  /** How Sprig is responding to the snack; overrides the mood face. */
-  reaction?: SnackReaction;
+  /** How Sprig is responding to the live interaction; overrides the mood face. */
+  reaction?: CreatureReaction;
 }
 
 type EyeStyle = 'open' | 'happy' | 'droop' | 'heavy' | 'closed';
@@ -62,6 +66,17 @@ export function Creature({ mood, sleeping, dirty, time, reaction = 'none' }: Cre
   } else if (reaction === 'yearning') {
     eyes = 'open';
     mouth = 'open';
+  } else if (reaction === 'pet-ready') {
+    // Hoping for the hand: attentive, looking right at the player.
+    eyes = 'open';
+    mouth = 'smile';
+  } else if (reaction === 'pet-stroking') {
+    // Being petted: eyes drift shut, a content little curve of a mouth.
+    eyes = 'closed';
+    mouth = 'smile';
+  } else if (reaction === 'pet-bliss') {
+    eyes = 'happy';
+    mouth = 'grin';
   }
 
   const puffedCheeks = reaction === 'eating' || reaction === 'gobbling' || reaction === 'teased';
@@ -159,10 +174,27 @@ export function Creature({ mood, sleeping, dirty, time, reaction = 'none' }: Cre
               </g>
             )}
             <Mouth style={mouth} />
-            <ellipse cx="72" cy="116" rx="8" ry="5" fill="#d98a5f" opacity="0.32" />
-            <ellipse cx="148" cy="116" rx="8" ry="5" fill="#d98a5f" opacity="0.32" />
+            {/* blush — deepens while Sprig is being petted (creature.css) */}
+            <g className="creature-blush">
+              <ellipse cx="72" cy="116" rx="8" ry="5" fill="#d98a5f" opacity="0.32" />
+              <ellipse cx="148" cy="116" rx="8" ry="5" fill="#d98a5f" opacity="0.32" />
+            </g>
           </g>
         </g>
+
+        {/* two small hearts drift up while Sprig melts into the petting
+            (placement on the wrapper groups, float animation on the paths,
+            so the two transforms never fight — same trick as the zzz) */}
+        {reaction === 'pet-bliss' && (
+          <g className="creature-hearts" fill="#d98a5f">
+            <g transform="translate(158 64)">
+              <path d="M0 2.6 C0 0.6 2 -0.8 3.8 0.5 C5.6 1.8 5.4 4.2 3.6 6 L0 9.4 L-3.6 6 C-5.4 4.2 -5.6 1.8 -3.8 0.5 C-2 -0.8 0 0.6 0 2.6 Z" />
+            </g>
+            <g transform="translate(176 40)">
+              <path d="M0 3.4 C0 0.8 2.6 -1 5 0.7 C7.3 2.3 7 5.5 4.7 7.8 L0 12.2 L-4.7 7.8 C-7 5.5 -7.3 2.3 -5 0.7 C-2.6 -1 0 0.8 0 3.4 Z" />
+            </g>
+          </g>
+        )}
 
         {/* a few honest crumbs after the snack */}
         {reaction === 'satisfied' && (

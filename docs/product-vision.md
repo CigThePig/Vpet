@@ -36,6 +36,9 @@ app should feel like checking on something small that is glad you came.
   _(First version shipped: Feed places one snack in the room; drag it to
   Sprig — or press it, for keyboard/screen-reader users — and Sprig eats.)_
 - Scratch/pet with small circular strokes; slow blink and lean-in response.
+  _(First version shipped: Care makes Sprig pettable in place; stroke it —
+  or press it, for keyboard/screen-reader users — and it closes its eyes,
+  blushes, leans into the hand, and melts into bliss.)_
 - Drag a blanket over Sprig at night; it settles and sleeps.
 - Pick up messes by dragging them to a bin that appears on grab.
 - A ball that can be flicked; Sprig watches and shuffles after it.

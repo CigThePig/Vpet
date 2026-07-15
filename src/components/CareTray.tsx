@@ -15,16 +15,18 @@ interface CareTrayProps {
   onSelect: (category: TrayCategory) => void;
   /** The Feed button, so the app can hand focus back when a snack goes away. */
   feedRef?: RefObject<HTMLButtonElement | null>;
+  /** The Care button, so the app can hand focus back when petting ends. */
+  careRef?: RefObject<HTMLButtonElement | null>;
 }
 
-/** Bottom interaction dock: four future care categories as tactile buttons. */
-export function CareTray({ active, onSelect, feedRef }: CareTrayProps) {
+/** Bottom interaction dock: four care categories as tactile buttons. */
+export function CareTray({ active, onSelect, feedRef, careRef }: CareTrayProps) {
   return (
     <nav className="care-tray" aria-label="Care actions" data-active={active ?? undefined}>
       {TRAY_CATEGORIES.map((category) => (
         <button
           key={category}
-          ref={category === 'feed' ? feedRef : undefined}
+          ref={category === 'feed' ? feedRef : category === 'care' ? careRef : undefined}
           type="button"
           className="tray-button"
           aria-pressed={active === category}
