@@ -84,27 +84,118 @@ test.describe('feeding Sprig', () => {
     expect(failedRequests).toEqual([]);
   });
 
-  test('releasing the snack away from Sprig returns it gently', async ({ page }) => {
+  test('a released snack drops, tumbles, and rests where it lands', async ({ page }) => {
     await gotoState(page, '?state=feed-ready');
     const snack = await centerOf(page, '.snack');
 
     await page.mouse.move(snack.x, snack.y);
     await page.mouse.down();
-    await page.mouse.move(snack.x + 60, snack.y - 260, { steps: 8 });
+    // Carry it up and to the left, away from Sprig, and let go.
+    await page.mouse.move(snack.x - 30, snack.y - 280, { steps: 8 });
     await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'held');
     await page.mouse.up();
 
-    await expect(page.getByRole('status')).toContainText(/rolled back/i);
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'falling');
+    await expect(page.getByRole('status')).toContainText(/tumbles/i);
     await expect(creature(page)).toHaveAttribute('data-reaction', 'missed');
-    // Fully recoverable: the snack settles back to ready near its rest spot.
-    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready', { timeout: 2000 });
+    // The berry is a physical thing: it lands on the floor plane and STAYS
+    // there — no teleporting back to its original spot.
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready', { timeout: 4000 });
     const settled = await centerOf(page, '.snack');
-    expect(Math.abs(settled.x - snack.x)).toBeLessThan(6);
-    expect(Math.abs(settled.y - snack.y)).toBeLessThan(6);
+    expect(Math.abs(settled.y - snack.y)).toBeLessThan(8); // back on the floor plane
     await expect(page.getByRole('button', { name: 'Feed' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
+
+    // …and it can be picked up again from its new spot and fed for real.
+    const sprig = await centerOf(page, '.creature-anchor');
+    await page.mouse.move(settled.x, settled.y);
+    await page.mouse.down();
+    await page.mouse.move(sprig.x, sprig.y, { steps: 10 });
+    await page.mouse.up();
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'eating');
+  });
+
+  test('a berry set down at Sprig’s feet gets gobbled off the floor', async ({ page }) => {
+    await gotoState(page, '?state=feed-ready');
+    const snack = await centerOf(page, '.snack');
+    const anchor = await page.locator('.creature-anchor').boundingBox();
+
+    await page.mouse.move(snack.x, snack.y);
+    await page.mouse.down();
+    // Set it down low, right in front of Sprig — below the mouth zone.
+    await page.mouse.move(anchor!.x + anchor!.width / 2 - 15, anchor!.y + anchor!.height - 12, {
+      steps: 12,
+    });
+    await page.mouse.up();
+
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'gobbling', { timeout: 3000 });
+    await expect(page.getByRole('status')).toContainText(/eats the snack/i);
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'satisfied', { timeout: 4000 });
+    await expect(page.getByRole('button', { name: 'Feed' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+      { timeout: 4000 },
+    );
+  });
+
+  test('a berry dropped on Sprig’s head perches, then gets shaken off', async ({ page }) => {
+    await gotoState(page, '?state=feed-ready');
+    const snack = await centerOf(page, '.snack');
+    const anchor = await page.locator('.creature-anchor').boundingBox();
+
+    await page.mouse.move(snack.x, snack.y);
+    await page.mouse.down();
+    await page.mouse.move(anchor!.x + anchor!.width / 2, anchor!.y + anchor!.height * 0.16, {
+      steps: 12,
+    });
+    await page.mouse.up();
+
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'perched');
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'perched');
+    await expect(page.getByRole('status')).toContainText(/balances/i);
+    // Sprig shakes it off after a moment; it tumbles and comes to rest.
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'falling', {
+      timeout: 4000,
+    });
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready', { timeout: 5000 });
+    await expect(page.getByRole('button', { name: 'Feed' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  test('waggling the berry in Sprig’s face earns a cheek-puff pout', async ({ page }) => {
+    await gotoState(page, '?state=feed-ready');
+    const snack = await centerOf(page, '.snack');
+    const anchor = await page.locator('.creature-anchor').boundingBox();
+    const fx = anchor!.x + anchor!.width / 2;
+    const fy = anchor!.y + anchor!.height * 0.4;
+
+    await page.mouse.move(snack.x, snack.y);
+    await page.mouse.down();
+    await page.mouse.move(fx - 55, fy, { steps: 6 });
+    for (let i = 0; i < 4; i += 1) {
+      await page.mouse.move(fx - 15, fy, { steps: 4 });
+      await page.mouse.move(fx - 70, fy, { steps: 4 });
+    }
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'teased');
+    // Teasing doesn't break feeding: give it to Sprig anyway.
+    await page.mouse.move(fx, fy, { steps: 6 });
+    await page.mouse.up();
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'eating');
+  });
+
+  test('Sprig reaches hopefully for a berry left resting on the floor', async ({ page }) => {
+    test.slow(); // the yearning loop waits a few seconds by design
+    await gotoState(page, '?state=idle');
+    await page.getByRole('button', { name: 'Feed' }).click();
+    await expect(snackButton(page)).toBeVisible();
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'yearning', { timeout: 6000 });
+    await expect(page.getByText(/reaches hopefully/i)).toBeAttached();
+    // …and settles back to simply noticing it.
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'notice', { timeout: 4000 });
   });
 
   test('keyboard: Enter on the snack feeds Sprig with the same result', async ({ page }) => {
@@ -129,16 +220,16 @@ test.describe('feeding Sprig', () => {
     expect(errors).toEqual([]);
   });
 
-  test('Escape during a drag cancels safely; nothing gets stuck', async ({ page }) => {
+  test('Escape during a drag drops the berry safely; nothing gets stuck', async ({ page }) => {
     await gotoState(page, '?state=feed-ready');
     const snack = await centerOf(page, '.snack');
     await page.mouse.move(snack.x, snack.y);
     await page.mouse.down();
-    await page.mouse.move(snack.x + 120, snack.y - 120, { steps: 6 });
+    await page.mouse.move(snack.x - 40, snack.y - 160, { steps: 6 });
     await page.keyboard.press('Escape');
 
-    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'returning');
-    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready', { timeout: 2000 });
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'falling');
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready', { timeout: 4000 });
     // The stray pointer-up afterwards must not re-trigger anything.
     await page.mouse.up();
     await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready');
@@ -180,6 +271,14 @@ test.describe('feeding Sprig', () => {
       .evaluate((el) => getComputedStyle(el).animationDuration);
     expect(parseFloat(duration)).toBeLessThanOrEqual(0.001);
 
+    // A drop resolves instantly instead of animating a tumble.
+    const snack = await centerOf(page, '.snack');
+    await page.mouse.move(snack.x, snack.y);
+    await page.mouse.down();
+    await page.mouse.move(snack.x - 30, snack.y - 200, { steps: 6 });
+    await page.mouse.up();
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'ready', { timeout: 1000 });
+
     await snackButton(page).focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('status')).toContainText(/eats the snack/i, { timeout: 2000 });
@@ -189,17 +288,30 @@ test.describe('feeding Sprig', () => {
 
   test('feed fixtures render deterministically without console errors', async ({ page }) => {
     const errors = collectConsoleErrors(page);
-    for (const state of ['feed-ready', 'feed-hover', 'feed-eaten', 'feed-returning']) {
+    for (const state of [
+      'feed-ready',
+      'feed-hover',
+      'feed-eaten',
+      'feed-perched',
+      'feed-gobbling',
+      'feed-teased',
+      'feed-yearning',
+    ]) {
       await gotoState(page, `?state=${state}`);
       await expect(page.getByRole('button', { name: 'Feed' })).toHaveAttribute(
         'aria-pressed',
         'true',
       );
     }
-    // Fixture-initialized phases must hold still (no timers auto-advance).
-    await gotoState(page, '?state=feed-returning');
-    await page.waitForTimeout(800);
-    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'returning');
+    // Fixture-initialized phases must hold still (no timers auto-advance):
+    // a fixture-perched berry is never shaken off, a fixture-yearning reach
+    // never clears.
+    await gotoState(page, '?state=feed-perched');
+    await page.waitForTimeout(900);
+    await expect(page.locator('.snack')).toHaveAttribute('data-phase', 'perched');
+    await gotoState(page, '?state=feed-yearning');
+    await page.waitForTimeout(900);
+    await expect(creature(page)).toHaveAttribute('data-reaction', 'yearning');
     expect(errors).toEqual([]);
   });
 });

@@ -149,3 +149,23 @@ Motion quality is reviewed by humans/agents looking at these artifacts;
 regression protection stays with the deterministic frozen fixtures.
 **Rejected:** video-diff testing (flaky, heavyweight) and adding an
 ffmpeg/image dependency (Playwright's Chromium already renders the filmstrip).
+
+## D17 — The berry is grounded: drop physics replace the glide-home return
+
+A missed release originally glided the berry back to its spawn point — a
+teleport that broke the "physical object" fiction. Now releasing the berry
+anywhere but Sprig's mouth DROPS it: a ~40-line rAF loop in the Snack
+component applies gravity, throw momentum from recent pointer velocity, a
+squash-and-dust bounce, and rolling friction with spin; the berry rests
+where it stops and is grabbable there (including mid-air catches). The floor
+is the horizontal plane through the berry's home spot; a berry rolling into
+Sprig's feet is stopped by them and gobbled straight off the floor
+(`gobbling`, a bowed eating pose). Dropping it on Sprig's head perches it
+(`perched`, cross-eyed wobble) until Sprig shakes it off; waggling it near
+the face registers as teasing and layers a transient cheek-puff `flourish`
+over the phase, as does the periodic `yearning` reach toward a berry left
+resting. Reduced motion resolves the physics instantly. **Rejected:** a
+physics library (one ball on one plane doesn't need one); keeping the
+glide-home (explicitly the behaviour being replaced); making the continuous
+landing position part of `HabitatState` (fixtures stay enumerable — live
+position lives in the Snack component; fixtures render canonical poses).

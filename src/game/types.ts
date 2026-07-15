@@ -25,10 +25,23 @@ export const TRAY_CATEGORIES: readonly TrayCategory[] = ['feed', 'care', 'play',
  * src/game/feed.ts.
  *
  *   none → ready → held ⇄ held-near → eating → eaten → none
- *                    ↓ (released away)
- *                 returning → ready
+ *            ↑        ↓ (released away — the berry is a physical thing)
+ *            |     falling (drop, bounce, roll…)
+ *            |        ↓ lands…
+ *            +──── anywhere on the floor        → ready (where it landed)
+ *            |     in front of Sprig's feet     → gobbling → eaten
+ *            |     on Sprig's head              → perched → falling (shaken off)
  */
-export type SnackPhase = 'none' | 'ready' | 'held' | 'held-near' | 'returning' | 'eating' | 'eaten';
+export type SnackPhase =
+  'none' | 'ready' | 'held' | 'held-near' | 'falling' | 'perched' | 'gobbling' | 'eating' | 'eaten';
+
+/**
+ * Short-lived emotional flourishes layered over the snack lifecycle: teased
+ * (the berry was waggled in front of Sprig's face) and yearning (the berry
+ * has been resting on the floor and Sprig reaches for it). Presentation
+ * state like everything else, so fixtures can freeze them.
+ */
+export type FeedFlourish = 'none' | 'teased' | 'yearning';
 
 /** Everything the habitat screen needs to render one deterministic frame. */
 export interface HabitatState {
@@ -42,6 +55,8 @@ export interface HabitatState {
   activeTray: TrayCategory | null;
   /** Where the Feed snack is in its lifecycle ('none' when Feed is inactive). */
   snack: SnackPhase;
+  /** Transient snack-play emotion (teased/yearning) layered over the phase. */
+  flourish: FeedFlourish;
 }
 
 export const DEFAULT_HABITAT_STATE: HabitatState = {
@@ -51,4 +66,5 @@ export const DEFAULT_HABITAT_STATE: HabitatState = {
   dirty: false,
   activeTray: null,
   snack: 'none',
+  flourish: 'none',
 };

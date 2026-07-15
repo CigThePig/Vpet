@@ -11,7 +11,10 @@ habitat screen, a deterministic development-state system, an automated
 screenshot / visual-review workflow designed so coding agents (and humans) can
 iterate on the UI by looking at rendered pixels, not just source code — plus
 the first direct-manipulation interaction: activate **Feed** and drag one
-snack to Sprig (keyboard/screen-reader users press the snack instead). Broader
+snack to Sprig (keyboard/screen-reader users press the snack instead). The
+berry is a physical object — dropped, it bounces and rolls to wherever it
+lands; set at Sprig's feet it gets gobbled off the floor; on its head it
+perches; waggled in its face it earns a pout. Broader
 game systems (hunger simulation, persistence, progression…) are intentionally
 not implemented yet. See [docs/product-vision.md](docs/product-vision.md).
 
@@ -59,7 +62,8 @@ parameters (full reference in [docs/visual-testing.md](docs/visual-testing.md)):
 
 ```
 /?state=idle|happy|hungry|tired|dirty|night|care-tray
-/?state=feed-ready|feed-hover|feed-eaten|feed-returning
+/?state=feed-ready|feed-hover|feed-eaten|feed-perched
+/?state=feed-gobbling|feed-teased|feed-yearning
 /?debug=touch-targets     outline every hit area
 /?motion=reduced          force reduced motion
 /?insets=1                simulate notch / home-indicator safe areas

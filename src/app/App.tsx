@@ -8,14 +8,17 @@ import { DevPanel } from '../dev/DevPanel';
 import { parseDevOptions } from '../dev/devState';
 import { FIXTURES } from '../game/fixtures';
 import {
-  cancelDrag,
   describeSprig,
+  dropSnack,
   endFeed,
   finishEating,
   grabSnack,
+  landSnack,
   moveSnack,
+  perchSnack,
   releaseSnack,
-  settleSnack,
+  setFlourish,
+  shakeOffSnack,
   startFeed,
 } from '../game/feed';
 import type { HabitatState, TrayCategory } from '../game/types';
@@ -29,11 +32,16 @@ const TRAY_MESSAGES: Record<Exclude<TrayCategory, 'feed'>, string> = {
 
 // Live feeding timings (ms). Timers only ever start from user events, never
 // from rendering a state — that is what keeps fixture-initialized phases
-// (feed-hover, feed-returning, …) frozen for deterministic screenshots.
+// (feed-hover, feed-perched, …) frozen for deterministic screenshots.
 const FLIGHT_MS = 340; // tap/keyboard give: the snack's glide to Sprig
 const EAT_MS = 1100; // munching
+const GOBBLE_MS = 1300; // bowing down + eating off the floor
 const LINGER_MS = 1500; // satisfied pause before Feed mode ends
-const RETURN_MS = 460; // missed drop rolling back to rest
+const PERCH_MS = 2600; // how long a head-perched berry balances before the shake-off
+const TEASE_MS = 1600; // how long the cheek-puff pout lasts
+const YEARN_DELAY_MS = 3500; // resting berry → first hopeful reach
+const YEARN_HOLD_MS = 1200; // how long each reach lasts
+const YEARN_GAP_MS = 5000; // pause between reaches
 
 export function App() {
   const dev = useMemo(() => parseDevOptions(window.location.search), []);
@@ -47,14 +55,29 @@ export function App() {
   habitatRef.current = habitat;
 
   const feedTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const yearnTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const creatureAnchorRef = useRef<HTMLDivElement | null>(null);
   const snackRef = useRef<HTMLButtonElement | null>(null);
   const feedButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  const reducedMotion = useMemo(
+    () =>
+      dev.forceReducedMotion ||
+      (typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+    [dev.forceReducedMotion],
+  );
+
+  const clearYearnTimers = useCallback(() => {
+    for (const t of yearnTimers.current) clearTimeout(t);
+    yearnTimers.current = [];
+  }, []);
+
   const clearFeedTimers = useCallback(() => {
     for (const t of feedTimers.current) clearTimeout(t);
     feedTimers.current = [];
-  }, []);
+    clearYearnTimers();
+  }, [clearYearnTimers]);
   useEffect(() => clearFeedTimers, [clearFeedTimers]);
 
   const scheduleFeed = useCallback((delay: number, fn: () => void) => {
@@ -74,12 +97,35 @@ export function App() {
     }
   }, []);
 
-  /** eating → eaten → feed mode over. Started only from a successful give. */
-  const runEatingSequence = useCallback(() => {
-    showToast('Sprig eats the snack and looks happy.');
-    scheduleFeed(EAT_MS, () => setHabitat(finishEating));
-    scheduleFeed(EAT_MS + LINGER_MS, () => setHabitat(endFeed));
-  }, [scheduleFeed, showToast]);
+  /**
+   * While the berry rests on the floor, Sprig occasionally reaches for it.
+   * Live-only: the loop starts from user-driven events (activation, landing)
+   * and dies silently the moment the berry is no longer resting.
+   */
+  const startYearnLoop = useCallback(() => {
+    clearYearnTimers();
+    const reach = () => {
+      if (habitatRef.current.snack !== 'ready') return; // loop ends
+      setHabitat((s) => setFlourish(s, 'yearning'));
+      yearnTimers.current.push(
+        setTimeout(() => {
+          setHabitat((s) => (s.flourish === 'yearning' ? setFlourish(s, 'none') : s));
+          yearnTimers.current.push(setTimeout(reach, YEARN_GAP_MS));
+        }, YEARN_HOLD_MS),
+      );
+    };
+    yearnTimers.current.push(setTimeout(reach, YEARN_DELAY_MS));
+  }, [clearYearnTimers]);
+
+  /** eating/gobbling → eaten → feed mode over. Started only from live events. */
+  const runEatingSequence = useCallback(
+    (munchMs: number) => {
+      showToast('Sprig eats the snack and looks happy.');
+      scheduleFeed(munchMs, () => setHabitat(finishEating));
+      scheduleFeed(munchMs + LINGER_MS, () => setHabitat(endFeed));
+    },
+    [scheduleFeed, showToast],
+  );
 
   const handleTraySelect = useCallback(
     (category: TrayCategory) => {
@@ -93,6 +139,7 @@ export function App() {
         } else {
           setHabitat(startFeed(current));
           showToast('A snack is ready for Sprig.');
+          startYearnLoop();
           // The snack is the interaction; hand it focus so keyboard and
           // screen-reader users land on it directly.
           requestAnimationFrame(() => snackRef.current?.focus());
@@ -104,53 +151,87 @@ export function App() {
       setHabitat({ ...base, activeTray: base.activeTray === category ? null : category });
       showToast(TRAY_MESSAGES[category]);
     },
-    [clearFeedTimers, rescueFocusFromSnack, showToast],
+    [clearFeedTimers, rescueFocusFromSnack, showToast, startYearnLoop],
   );
 
   // ---- Snack gesture wiring ------------------------------------------------
 
   const handleSnackGrab = useCallback(() => {
+    clearYearnTimers();
     setHabitat(grabSnack(habitatRef.current));
-  }, []);
+  }, [clearYearnTimers]);
 
   const handleSnackNearChange = useCallback((near: boolean) => {
     setHabitat(moveSnack(habitatRef.current, near));
   }, []);
 
-  const handleSnackRelease = useCallback(() => {
+  /** Released over the mouth: the one true feeding path. */
+  const handleSnackFeed = useCallback(() => {
     const next = releaseSnack(habitatRef.current);
+    if (next === habitatRef.current || next.snack !== 'eating') return;
+    rescueFocusFromSnack();
+    setHabitat(next);
+    runEatingSequence(EAT_MS);
+  }, [rescueFocusFromSnack, runEatingSequence]);
+
+  /** Released over the head: the berry balances until Sprig shakes it off. */
+  const handleSnackPerched = useCallback(() => {
+    const next = perchSnack(habitatRef.current);
     if (next === habitatRef.current) return;
     setHabitat(next);
-    if (next.snack === 'eating') {
-      rescueFocusFromSnack();
-      runEatingSequence();
-    } else {
-      showToast('The snack rolled back — try again.');
-      scheduleFeed(RETURN_MS, () => setHabitat(settleSnack));
-    }
-  }, [rescueFocusFromSnack, runEatingSequence, scheduleFeed, showToast]);
+    showToast('The berry balances on Sprig’s head.');
+    scheduleFeed(PERCH_MS, () => setHabitat(shakeOffSnack));
+  }, [scheduleFeed, showToast]);
+
+  /** Released anywhere else: the berry drops and tumbles (physics in Snack). */
+  const handleSnackDropped = useCallback(() => {
+    const next = dropSnack(habitatRef.current);
+    if (next === habitatRef.current) return;
+    setHabitat(next);
+    showToast('The snack tumbles across the floor.');
+  }, [showToast]);
+
+  /** The tumble ended. In front of Sprig's feet → gobbled off the floor. */
+  const handleSnackLanded = useCallback(
+    (inFeedZone: boolean) => {
+      const next = landSnack(habitatRef.current, inFeedZone);
+      if (next === habitatRef.current) return;
+      setHabitat(next);
+      if (next.snack === 'gobbling') {
+        rescueFocusFromSnack();
+        runEatingSequence(GOBBLE_MS);
+      } else {
+        startYearnLoop();
+      }
+    },
+    [rescueFocusFromSnack, runEatingSequence, startYearnLoop],
+  );
+
+  /** The berry was waggled in Sprig's face: brief indignant pout. */
+  const handleSnackTease = useCallback(() => {
+    const next = setFlourish(habitatRef.current, 'teased');
+    if (next === habitatRef.current) return;
+    setHabitat(next);
+    scheduleFeed(TEASE_MS, () =>
+      setHabitat((s) => (s.flourish === 'teased' ? setFlourish(s, 'none') : s)),
+    );
+  }, [scheduleFeed]);
 
   /** Tap or keyboard activation: the snack glides to Sprig by itself. */
   const handleSnackGive = useCallback(() => {
     const current = habitatRef.current;
-    if (current.snack !== 'ready' && current.snack !== 'held') return;
-    setHabitat({ ...current, snack: 'held-near' });
+    if (current.snack !== 'ready' && current.snack !== 'held' && current.snack !== 'perched')
+      return;
+    clearYearnTimers();
+    setHabitat({ ...current, snack: 'held-near', flourish: 'none' });
     scheduleFeed(FLIGHT_MS, () => {
       const next = releaseSnack(habitatRef.current);
       if (next === habitatRef.current) return;
       rescueFocusFromSnack();
       setHabitat(next);
-      runEatingSequence();
+      runEatingSequence(EAT_MS);
     });
-  }, [rescueFocusFromSnack, runEatingSequence, scheduleFeed]);
-
-  const handleSnackCancelDrag = useCallback(() => {
-    const next = cancelDrag(habitatRef.current);
-    if (next === habitatRef.current) return;
-    setHabitat(next);
-    showToast('The snack rolled back — try again.');
-    scheduleFeed(RETURN_MS, () => setHabitat(settleSnack));
-  }, [scheduleFeed, showToast]);
+  }, [clearYearnTimers, rescueFocusFromSnack, runEatingSequence, scheduleFeed]);
 
   /** Escape on the resting snack: leave Feed mode, focus returns to Feed. */
   const handleSnackDismiss = useCallback(() => {
@@ -174,7 +255,7 @@ export function App() {
     );
   }, []);
 
-  /** Live eye tracking while the snack is carried; null clears to defaults. */
+  /** Live eye tracking while the snack moves; null clears to pose defaults. */
   const handleSnackLook = useCallback((x: number | null, y: number | null) => {
     const anchor = creatureAnchorRef.current;
     if (!anchor) return;
@@ -186,6 +267,13 @@ export function App() {
       anchor.style.setProperty('--look-y', y.toFixed(3));
     }
   }, []);
+
+  // Clear any lingering live gaze once the snack is gone.
+  useEffect(() => {
+    if (habitat.snack === 'none' || habitat.snack === 'eaten') {
+      handleSnackLook(null, null);
+    }
+  }, [habitat.snack, handleSnackLook]);
 
   const handleJournal = useCallback(() => {
     showToast('The journal will live here — nothing to read yet.');
@@ -207,10 +295,7 @@ export function App() {
   }, []);
 
   const snackVisible =
-    habitat.snack === 'ready' ||
-    habitat.snack === 'held' ||
-    habitat.snack === 'held-near' ||
-    habitat.snack === 'returning';
+    habitat.snack !== 'none' && habitat.snack !== 'eating' && habitat.snack !== 'eaten';
 
   return (
     <div
@@ -227,11 +312,15 @@ export function App() {
         {snackVisible && (
           <Snack
             phase={habitat.snack}
+            reducedMotion={reducedMotion}
             onGrab={handleSnackGrab}
             onNearChange={handleSnackNearChange}
-            onRelease={handleSnackRelease}
+            onFeed={handleSnackFeed}
+            onPerched={handleSnackPerched}
+            onDropped={handleSnackDropped}
+            onLanded={handleSnackLanded}
+            onTease={handleSnackTease}
             onGive={handleSnackGive}
-            onCancelDrag={handleSnackCancelDrag}
             onDismiss={handleSnackDismiss}
             getTargetRect={getCreatureRect}
             onLook={handleSnackLook}

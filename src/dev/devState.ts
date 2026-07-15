@@ -9,7 +9,8 @@ import { isFixtureName } from '../game/fixtures';
  * screenshot harness):
  *
  *   ?state=idle|happy|hungry|tired|dirty|night|care-tray
- *         |feed-ready|feed-hover|feed-eaten|feed-returning  visual fixture
+ *         |feed-ready|feed-hover|feed-eaten|feed-perched
+ *         |feed-gobbling|feed-teased|feed-yearning          visual fixture
  *   ?debug=touch-targets                                    outline all hit areas
  *   ?motion=reduced                                         force reduced motion
  *   ?insets=1                                               simulate device safe areas
